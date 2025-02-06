@@ -1,0 +1,48 @@
+/* SUIT:
+   - 0 == ♠ SPADES
+   - 1 == ♦ DIAMONDS
+   - 2 == ♣ CLUBS
+   - 3 == ♥ HEARTS
+
+     VALUE:
+   - 1 == (A) ACE
+   - 2 - 9 == ITS Value
+   - 10 == (T) TEN
+   - 11 == (J) JACK
+   - 12 == (Q) QUEEN
+   - 13 == (K) KING
+   */
+class Card {
+    constructor(suit, value) {
+        this.suit = suit;
+        this.value = value;
+    }
+    toString() {
+        const valueSymbol = { 1: "A", 10: "T", 11: "J", 12: "Q", 13: "K" };
+        const suitSymbols = ["♠", "♦", "♣", "♥"];
+        return (valueSymbol[this.value] || this.value) + suitSymbols[this.suit];
+    }
+}
+export class Deck {
+    constructor() {
+        this.cards = [];
+        this.init();
+    }
+    init() {
+        for (let currentSuit = 0; currentSuit <= 3; currentSuit++)
+            for (let currentValue = 1; currentValue <= 13; currentValue++)
+                this.cards.push(new Card(currentSuit, currentValue));
+    }
+    shuffle() {
+        /* Fisher-Yates Modern Version */
+        let last_index = this.cards.length - 1;
+        while (last_index > 0) {
+            let rand_index = Math.floor(Math.random() * last_index + 1);
+            [this.cards[last_index], this.cards[rand_index]] = [this.cards[rand_index], this.cards[last_index]];
+            last_index -= 1;
+        }
+    }
+    printDeck() {
+        console.log(this.cards.map(card => card.toString()).join(" | "));
+    }
+}

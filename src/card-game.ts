@@ -1,6 +1,4 @@
-
-class Card {
-  /* SUIT: 
+ /* SUIT: 
     - 0 == ♠ SPADES
     - 1 == ♦ DIAMONDS
     - 2 == ♣ CLUBS
@@ -14,32 +12,22 @@ class Card {
     - 12 == (Q) QUEEN
     - 13 == (K) KING
     */
+
+class Card {
   suit: number;
   value: number;
   constructor(suit: number, value: number){
     this.suit = suit;
     this.value = value;
   }
-
-  get getCard():string{
-    
-    return this.getNumberSymbol(this.value)+this.getSuitSymbol(this.suit);
-  }
-
-  private getSuitSymbol(suit: number): string{
+  toString(): string{
+    const valueSymbol: { [key: number]: string } = { 1: "A", 10: "T", 11: "J", 12: "Q", 13: "K" };
     const suitSymbols = ["♠","♦","♣","♥"];
-    return suitSymbols[suit];
-  }
-  private getNumberSymbol(value: number): string{
-    if (value==1) return "A";
-    if (value==10) return "T";
-    if (value==11) return "J";
-    if (value==12) return "Q";
-    if (value==13) return "K";
-    return value.toString();
+    return (valueSymbol[this.value]||this.value)+suitSymbols[this.suit];
   }
 }
-class Deck {
+
+export class Deck {
   cards: Card[] = [];
   constructor() {
     this.init();
@@ -56,22 +44,15 @@ class Deck {
     let last_index:number = this.cards.length-1;
     while (last_index > 0){
       let rand_index=Math.floor(Math.random()*last_index+1);
-      let temp = this.cards[last_index];
-      this.cards[last_index]=this.cards[rand_index];
-      this.cards[rand_index]=temp;
+      [this.cards[last_index], this.cards[rand_index]] = [this.cards[rand_index], this.cards[last_index]];
       last_index -= 1;
     }
   }
+
+  printDeck(){
+    console.log(this.cards.map(card => card.toString()).join(" | "));
+  }
 }
-
-let deck = new Deck();
-deck.shuffle();
-
-for (let i=0; i<deck.cards.length; i++)
-  console.log(i+" : " + deck.cards[i].getCard);
-
-  
-
 
 
 
