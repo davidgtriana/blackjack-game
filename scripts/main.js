@@ -39,8 +39,20 @@ var Deck = /** @class */ (function () {
             for (var currentValue = 1; currentValue <= 13; currentValue++)
                 this.cards.push(new Card(currentSuit, currentValue));
     };
+    Deck.prototype.shuffle = function () {
+        /* Fisher-Yates Modern Version */
+        var last_index = this.cards.length - 1;
+        while (last_index > 0) {
+            var rand_index = Math.floor(Math.random() * last_index + 1);
+            var temp = this.cards[last_index];
+            this.cards[last_index] = this.cards[rand_index];
+            this.cards[rand_index] = temp;
+            last_index -= 1;
+        }
+    };
     return Deck;
 }());
 var deck = new Deck();
-for (var i = 0; i < 52; i++)
-    console.log(deck.cards[i].getCard);
+deck.shuffle();
+for (var i = 0; i < deck.cards.length; i++)
+    console.log(i + " : " + deck.cards[i].getCard);

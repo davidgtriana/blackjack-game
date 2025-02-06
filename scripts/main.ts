@@ -50,12 +50,25 @@ class Deck {
       for (let currentValue = 1; currentValue <=13 ; currentValue++)
         this.cards.push(new Card(currentSuit,currentValue));
   }
+
+  public shuffle (): void{
+    /* Fisher-Yates Modern Version */
+    let last_index:number = this.cards.length-1;
+    while (last_index > 0){
+      let rand_index=Math.floor(Math.random()*last_index+1);
+      let temp = this.cards[last_index];
+      this.cards[last_index]=this.cards[rand_index];
+      this.cards[rand_index]=temp;
+      last_index -= 1;
+    }
+  }
 }
 
 let deck = new Deck();
+deck.shuffle();
 
-for (let i=0; i<52; i++)
-  console.log(deck.cards[i].getCard);
+for (let i=0; i<deck.cards.length; i++)
+  console.log(i+" : " + deck.cards[i].getCard);
 
   
 
