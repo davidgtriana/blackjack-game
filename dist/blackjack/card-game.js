@@ -3,10 +3,12 @@ export class Card {
         this.suit = suit;
         this.value = value;
     }
-    toString() {
-        const valueSymbol = { 1: "A", 10: "T", 11: "J", 12: "Q", 13: "K" };
+    toString(type) {
+        // Type: (true) Symbols, (false) Letters 
+        const valueLetters = { 1: "A", 10: "T", 11: "J", 12: "Q", 13: "K" };
+        const suitLetters = ["S", "D", "C", "H"];
         const suitSymbols = ["♠", "♦", "♣", "♥"];
-        return (valueSymbol[this.value] || this.value) + suitSymbols[this.suit];
+        return (valueLetters[this.value] || this.value) + (type ? suitSymbols[this.suit] : suitLetters[this.suit]);
     }
 }
 export class Deck {
@@ -35,7 +37,7 @@ export class Deck {
     print() {
         console.log("Amount of Cards: " + this.amount_of_cards);
         console.log("Amount of Cards Used: " + this.amount_of_cards_used);
-        console.log(this.cards.map(card => card.toString()).join(" | "));
+        console.log(this.cards.map(card => card.toString(false)).join(" | "));
     }
 }
 export class Shoe extends Deck {

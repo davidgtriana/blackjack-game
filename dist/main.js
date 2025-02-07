@@ -62,12 +62,13 @@ class BlackjackGame {
     }
     display() {
         // Update dealer hand
-        const lblDealerHand = document.getElementById("dealer-hand");
-        if (!lblDealerHand)
+        const element_dealerHand = document.getElementById("dealer-hand");
+        if (!element_dealerHand)
             return;
-        lblDealerHand.innerText = this.dealer.cards.map(card => card.toString()).join(" | ");
+        // Creating Card Image
+        element_dealerHand.appendChild(this.getCardImgElement(this.dealer.cards[0]));
         console.log();
-        console.log("Dealer Hand: " + this.dealer.cards.map(card => card.toString()).join(" | "));
+        console.log("Dealer Hand: " + this.dealer.cards.map(card => card.toString(true)).join(" | "));
         for (let currentBetBox = 0; currentBetBox < this.bet_boxes.length; currentBetBox++) {
             let betbox = this.bet_boxes[currentBetBox];
             if (betbox.player == null)
@@ -75,9 +76,19 @@ class BlackjackGame {
             console.log("Box No. " + (currentBetBox + 1) + ": ");
             for (let currentHand = 0; currentHand < betbox.hands.length; currentHand++) {
                 let hand = betbox.hands[currentHand];
-                console.log("Hand No. " + (currentHand + 1) + ": Wager: $" + hand.bet + " Cards: " + hand.cards.map(card => card.toString()).join(" | "));
+                console.log("Hand No. " + (currentHand + 1) + ": Wager: $" + hand.bet + " Cards: " + hand.cards.map(card => card.toString(true)).join(" | "));
             }
         }
+    }
+    getCardImgElement(card) {
+        // Card Images Origin h: 240 w: 160
+        let cards_path = "./assets/cards/";
+        let img_type_file = ".png";
+        const cardImg = document.createElement("img");
+        cardImg.width = 60; //60
+        cardImg.height = 90; //90
+        cardImg.src = cards_path + card.toString(false) + img_type_file;
+        return cardImg;
     }
 }
 let game = new BlackjackGame();
