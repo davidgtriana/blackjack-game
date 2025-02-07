@@ -1,5 +1,8 @@
-import {DiceRoller} from "./dice-roller.js";
-import * as Game from "./card-game.js";
+import {DiceRoller} from "./blackjack/dice-roller.js";
+import {Hand} from "./blackjack/hand.js"
+import {Player} from "./blackjack/player.js"
+import {BetBox} from "./blackjack/bet-box.js"
+import * as Game from "./blackjack/card-game.js";
 
 class BlackjackGame {
     die: DiceRoller = new DiceRoller(12345);
@@ -26,6 +29,8 @@ class BlackjackGame {
     constructor(){
         console.log("Seed: "+ this.die.getSeed);
         // Start the table
+        this.dealer = new Hand(0);
+
         // -- Prepare the Shoe
         this.shoe = new Game.Shoe(this.DECKS_PER_SHOE);
         this.shoe.shuffle(this.die);
@@ -61,7 +66,6 @@ class BlackjackGame {
             hand.hit(this.shoe.draw()!);
 
         // Deal the Primary Card to Dealer
-        this.dealer = new Hand(0);
         this.dealer.hit(this.shoe.draw()!);
 
         // Deal the Secondary Card to Players
@@ -99,47 +103,10 @@ class BlackjackGame {
     }
 }
 
-class Player{
-    name: string = "David";
-    stack: number = 0;
 
-    constructor(){
-        this.stack = 1000;
-    }
-}
 
-class Hand{
-    cards: Game.Card[] = [];
-    cards_value: number = 0;
-    bet: number = 0;
-    
-    constructor(bet:number){
-        this.bet = bet;
-    }
 
-    public hit(card:Game.Card): void{
-        this.cards.push(card);
-        this.cards_value += card.value;
-    }
 
-    public stand(): void{}
-    public double(): void{}
-    public split(): void{}
-    public surrender(): void{}
-    public insurance(): void{}
-}
-
-class BetBox{
-    player!: Player;
-    hands: Hand[] = [];
-
-    constructor(){}
-
-    public placeBet(bet: number){
-        this.hands.push(new Hand(bet));
-        this.player.stack -= bet;
-    }
-}
 
 let game = new BlackjackGame();
 

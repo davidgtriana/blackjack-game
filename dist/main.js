@@ -1,5 +1,8 @@
-import { DiceRoller } from "./dice-roller.js";
-import * as Game from "./card-game.js";
+import { DiceRoller } from "./blackjack/dice-roller.js";
+import { Hand } from "./blackjack/hand.js";
+import { Player } from "./blackjack/player.js";
+import { BetBox } from "./blackjack/bet-box.js";
+import * as Game from "./blackjack/card-game.js";
 class BlackjackGame {
     constructor() {
         this.die = new DiceRoller(12345);
@@ -17,6 +20,7 @@ class BlackjackGame {
         this.active_hands = [];
         console.log("Seed: " + this.die.getSeed);
         // Start the table
+        this.dealer = new Hand(0);
         // -- Prepare the Shoe
         this.shoe = new Game.Shoe(this.DECKS_PER_SHOE);
         this.shoe.shuffle(this.die);
@@ -44,7 +48,6 @@ class BlackjackGame {
         for (let hand of this.active_hands)
             hand.hit(this.shoe.draw());
         // Deal the Primary Card to Dealer
-        this.dealer = new Hand(0);
         this.dealer.hit(this.shoe.draw());
         // Deal the Secondary Card to Players
         for (let hand of this.active_hands)
@@ -71,39 +74,6 @@ class BlackjackGame {
                 console.log("Hand No. " + (currentHand + 1) + ": Wager: $" + hand.bet + " Cards: " + hand.cards.map(card => card.toString()).join(" | "));
             }
         }
-    }
-}
-class Player {
-    constructor() {
-        this.name = "David";
-        this.stack = 0;
-        this.stack = 1000;
-    }
-}
-class Hand {
-    constructor(bet) {
-        this.cards = [];
-        this.cards_value = 0;
-        this.bet = 0;
-        this.bet = bet;
-    }
-    hit(card) {
-        this.cards.push(card);
-        this.cards_value += card.value;
-    }
-    stand() { }
-    double() { }
-    split() { }
-    surrender() { }
-    insurance() { }
-}
-class BetBox {
-    constructor() {
-        this.hands = [];
-    }
-    placeBet(bet) {
-        this.hands.push(new Hand(bet));
-        this.player.stack -= bet;
     }
 }
 let game = new BlackjackGame();
