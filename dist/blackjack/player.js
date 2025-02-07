@@ -1,7 +1,7 @@
 export class Player {
-    constructor() {
-        this.name = "David";
+    constructor(name) {
         this.stack = 0;
+        this.name = name;
         this.stack = 1000;
     }
 }

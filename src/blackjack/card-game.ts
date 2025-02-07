@@ -29,16 +29,24 @@ export class Card {
   }
 }
 
-export class Deck {
+export class StackCard {
   cards: Card[] = [];
   amount_of_cards: number;
   amount_of_cards_used: number;
-  constructor() {
+  amount_of_decks: number;
+
+  constructor(amount_of_decks:number) {
+    this.amount_of_decks = amount_of_decks;
+    for (let i=0;i<this.amount_of_decks;i++)
+      this.createDeck();
+    this.amount_of_cards = this.cards.length;
+    this.amount_of_cards_used = 0;
+  }
+
+  private createDeck(){
     for (let currentSuit = 0; currentSuit <=3 ; currentSuit++)											
       for (let currentValue = 1; currentValue <=13 ; currentValue++)
         this.cards.push(new Card(currentSuit,currentValue));
-    this.amount_of_cards = this.cards.length;
-    this.amount_of_cards_used = 0;
   }
 
   public shuffle (die:DiceRoller): void{
@@ -51,32 +59,23 @@ export class Deck {
     }
   }
 
+  // Returns the first card of the stack from up-down and removes it from the stack
   public draw(): Card | undefined {
     this.amount_of_cards -= 1;
     this.amount_of_cards_used += 1;
     return this.cards.shift();
   }
 
+  // Adds the card to the stack from up-down
+  public add(card:Card){
+    this.amount_of_cards += 1;
+    this.cards.unshift(card);
+  }
+
   print(){
-    console.log("Amount of Cards: " + this.amount_of_cards);
-    console.log("Amount of Cards Used: " + this.amount_of_cards_used);
-    console.log(this.cards.map(card => card.toString(false)).join(" | "));
+    console.log("Printing Deck: Amount of Cards: " + this.amount_of_cards + "  Amount of Cards Used: " + this.amount_of_cards_used);
+    console.log(this.cards.map(card => card.toString(true)).join(" | "));
   }
 }
-
-export class Shoe extends Deck{
-  amount_of_decks: number;
-  constructor(amount_of_decks:number){
-    super();
-    this.cards = [];
-    this.amount_of_decks = amount_of_decks;
-    for(let i=0; i < this.amount_of_decks; i++){
-      let new_deck = new Deck();
-      this.cards.push(...new_deck.cards);
-    }
-    this.amount_of_cards = this.cards.length;
-  }
-}
-
 
 

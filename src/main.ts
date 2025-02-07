@@ -6,20 +6,23 @@ import * as Game from "./blackjack/card-game.js";
 
 class BlackjackGame {
     die: DiceRoller = new DiceRoller(12345);
+
     MAX_HANDS: number = 4;
     MAX_BET_BOXES: number = 9;
     DECKS_PER_SHOE: number = 6;
     DECK_PENETRATION: number = 0.50;
+    MIN_BET: number = 25;
+    MAX_BET: number = 750;
 
     IS_EUROPEAN_NO_HOLE_CARD: boolean = true;
     IS_ALLOWED_SURRENDER: boolean = true;
     IS_ALLOWED_DOUBLE_AFTER_SPLIT: boolean = true;
     IS_ORIGINAL_BET_ONLY: boolean = true;
 
-    shoe!: Game.Shoe;
-    discard_pile: Game.Card[] = [];
+    shoe!: Game.StackCard;
+    discard_pile!: Game.StackCard;
 
-    dealer!: Hand;
+    dealerHand!: Hand;
     players: Player[] = [];
 
     bet_boxes: BetBox[] = [];
@@ -29,24 +32,29 @@ class BlackjackGame {
     constructor(){
         console.log("Seed: "+ this.die.getSeed);
         // Start the table
-        this.dealer = new Hand(0);
+        this.dealerHand = new Hand(0);
+        this.discard_pile = new Game.StackCard(0);
 
         // -- Prepare the Shoe
-        this.shoe = new Game.Shoe(this.DECKS_PER_SHOE);
+        this.shoe = new Game.StackCard(this.DECKS_PER_SHOE);
         this.shoe.shuffle(this.die);
+
         // -- Burning Card
-        this.discard_pile.push(this.shoe.draw()!);
+        this.discard_pile.add(this.shoe.draw()!);
         
         // -- Create the Bet Boxes
         for(let i=0; i<this.MAX_BET_BOXES;i++)
             this.bet_boxes.push(new BetBox());
 
         // -- Sit the players
-        this.players.push(new Player());
+        this.players.push(new Player("Juan"));
+        this.players.push(new Player("David"));
         this.bet_boxes[0].player = this.players[0];
+        this.bet_boxes[1].player = this.players[1];
 
         // Place your bets
         this.bet_boxes[0].placeBet(25);
+        this.bet_boxes[1].placeBet(25);
 
         this.initialDealOut();
         this.courseOfPlay();
@@ -65,14 +73,16 @@ class BlackjackGame {
             hand.hit(this.shoe.draw()!);
 
         // Deal the Primary Card to Dealer
-        this.dealer.hit(this.shoe.draw()!);
+        this.dealerHand.hit(this.shoe.draw()!);
 
         // Deal the Secondary Card to Players
         for (let hand of this.active_hands)
             hand.hit(this.shoe.draw()!);
 
         // Deal the Secondary Card to Dealer
-        if (!this.IS_EUROPEAN_NO_HOLE_CARD) this.dealer.hit(this.shoe.draw()!);
+        if (!this.IS_EUROPEAN_NO_HOLE_CARD) this.dealerHand.hit(this.shoe.draw()!);
+
+        this.shoe.print();
 
         this.display();
 
@@ -92,17 +102,17 @@ class BlackjackGame {
         if (!element_dealerHand) return;
 
         // Creating Card Image
-        element_dealerHand.appendChild(this.getCardImgElement(this.dealer.cards[0]));
+        element_dealerHand.appendChild(this.getCardImgElement(this.dealerHand.cards[0]));
 
-        console.log();
-        console.log("Dealer Hand: " + this.dealer.cards.map(card => card.toString(true)).join(" | "));
+        console.log("Dealer Hand: ");
+        this.dealerHand.print();
         for (let currentBetBox=0; currentBetBox<this.bet_boxes.length; currentBetBox++){
             let betbox:BetBox = this.bet_boxes[currentBetBox];
             if (betbox.player == null) continue;
-            console.log("Box No. "+(currentBetBox+1)+": ");
+            console.log("Box No. "+(currentBetBox+1)+": Player: " + betbox.player.name);
             for (let currentHand=0; currentHand<betbox.hands.length; currentHand++){
                 let hand:Hand = betbox.hands[currentHand];
-                console.log("Hand No. "+(currentHand+1)+ ": Wager: $" + hand.bet + " Cards: " + hand.cards.map(card => card.toString(true)).join(" | "));
+                hand.print(currentHand+1);
             }  
         }     
     }
@@ -113,7 +123,6 @@ class BlackjackGame {
         let cards_path: string = "./assets/cards/"
         let img_type_file: string = ".png";
 
-        
         const cardImg = document.createElement("img");
         cardImg.width = 60; //60
         cardImg.height = 90; //90

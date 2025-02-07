@@ -11,14 +11,19 @@ export class Card {
         return (valueLetters[this.value] || this.value) + (type ? suitSymbols[this.suit] : suitLetters[this.suit]);
     }
 }
-export class Deck {
-    constructor() {
+export class StackCard {
+    constructor(amount_of_decks) {
         this.cards = [];
+        this.amount_of_decks = amount_of_decks;
+        for (let i = 0; i < this.amount_of_decks; i++)
+            this.createDeck();
+        this.amount_of_cards = this.cards.length;
+        this.amount_of_cards_used = 0;
+    }
+    createDeck() {
         for (let currentSuit = 0; currentSuit <= 3; currentSuit++)
             for (let currentValue = 1; currentValue <= 13; currentValue++)
                 this.cards.push(new Card(currentSuit, currentValue));
-        this.amount_of_cards = this.cards.length;
-        this.amount_of_cards_used = 0;
     }
     shuffle(die) {
         /* Fisher-Yates Modern Version */
@@ -29,26 +34,19 @@ export class Deck {
             last_index -= 1;
         }
     }
+    // Returns the first card of the stack from up-down and removes it from the stack
     draw() {
         this.amount_of_cards -= 1;
         this.amount_of_cards_used += 1;
         return this.cards.shift();
     }
-    print() {
-        console.log("Amount of Cards: " + this.amount_of_cards);
-        console.log("Amount of Cards Used: " + this.amount_of_cards_used);
-        console.log(this.cards.map(card => card.toString(false)).join(" | "));
+    // Adds the card to the stack from up-down
+    add(card) {
+        this.amount_of_cards += 1;
+        this.cards.unshift(card);
     }
-}
-export class Shoe extends Deck {
-    constructor(amount_of_decks) {
-        super();
-        this.cards = [];
-        this.amount_of_decks = amount_of_decks;
-        for (let i = 0; i < this.amount_of_decks; i++) {
-            let new_deck = new Deck();
-            this.cards.push(...new_deck.cards);
-        }
-        this.amount_of_cards = this.cards.length;
+    print() {
+        console.log("Printing Deck: Amount of Cards: " + this.amount_of_cards + "  Amount of Cards Used: " + this.amount_of_cards_used);
+        console.log(this.cards.map(card => card.toString(true)).join(" | "));
     }
 }

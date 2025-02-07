@@ -10,8 +10,9 @@ export class Hand{
     }
 
     public hit(card:Game.Card): void{
+        const card_values_bj: { [key: number]: number } = {11: 10, 12: 10, 13: 10};
+        this.cards_value += card_values_bj[card.value]||card.value;
         this.cards.push(card);
-        this.cards_value += card.value;
     }
 
     public stand(): void{}
@@ -19,4 +20,8 @@ export class Hand{
     public split(): void{}
     public surrender(): void{}
     public insurance(): void{}
+
+    public print(id?:number){
+        console.log("Hand No. "+(id?id:0)+ ": Points: " + this.cards_value + " Wager: $" + this.bet + " Cards: " + this.cards.map(card => card.toString(true)).join(" | "));
+    }
 }

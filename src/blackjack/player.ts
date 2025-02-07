@@ -1,8 +1,9 @@
 export class Player{
-    name: string = "David";
+    name!: string;
     stack: number = 0;
 
-    constructor(){
+    constructor(name:string){
+        this.name = name;
         this.stack = 1000;
     }
 }
