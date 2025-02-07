@@ -12,7 +12,7 @@
     - 12 == (Q) QUEEN
     - 13 == (K) KING
     */
-
+import {DiceRoller} from "./dice-roller.js";
 export class Card {
   suit: number;
   value: number;
@@ -39,11 +39,11 @@ export class Deck {
     this.amount_of_cards_used = 0;
   }
 
-  public shuffle (): void{
+  public shuffle (die:DiceRoller): void{
     /* Fisher-Yates Modern Version */
     let last_index:number = this.cards.length-1;
     while (last_index > 0){
-      let rand_index=Math.floor(Math.random()*(last_index+1));
+      let rand_index=die.roll(last_index+1);
       [this.cards[last_index], this.cards[rand_index]] = [this.cards[rand_index], this.cards[last_index]];
       last_index -= 1;
     }

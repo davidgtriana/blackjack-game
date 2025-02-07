@@ -1,6 +1,8 @@
+import { DiceRoller } from "./dice-roller.js";
 import * as Game from "./card-game.js";
 class BlackjackGame {
     constructor() {
+        this.die = new DiceRoller(12345);
         this.MAX_HANDS = 4;
         this.MAX_BET_BOXES = 9;
         this.DECKS_PER_SHOE = 6;
@@ -13,10 +15,11 @@ class BlackjackGame {
         this.players = [];
         this.bet_boxes = [];
         this.active_hands = [];
+        console.log("Seed: " + this.die.getSeed);
         // Start the table
         // -- Prepare the Shoe
         this.shoe = new Game.Shoe(this.DECKS_PER_SHOE);
-        this.shoe.shuffle();
+        this.shoe.shuffle(this.die);
         // -- Burning Card
         this.discard_pile.push(this.shoe.draw());
         this.shoe.print();

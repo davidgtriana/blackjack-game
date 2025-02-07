@@ -1,17 +1,3 @@
-/* SUIT:
-   - 0 == ♠ SPADES
-   - 1 == ♦ DIAMONDS
-   - 2 == ♣ CLUBS
-   - 3 == ♥ HEARTS
-
-     VALUE:
-   - 1 == (A) ACE
-   - 2 - 9 == ITS Value
-   - 10 == (T) TEN
-   - 11 == (J) JACK
-   - 12 == (Q) QUEEN
-   - 13 == (K) KING
-   */
 export class Card {
     constructor(suit, value) {
         this.suit = suit;
@@ -32,11 +18,11 @@ export class Deck {
         this.amount_of_cards = this.cards.length;
         this.amount_of_cards_used = 0;
     }
-    shuffle() {
+    shuffle(die) {
         /* Fisher-Yates Modern Version */
         let last_index = this.cards.length - 1;
         while (last_index > 0) {
-            let rand_index = Math.floor(Math.random() * (last_index + 1));
+            let rand_index = die.roll(last_index + 1);
             [this.cards[last_index], this.cards[rand_index]] = [this.cards[rand_index], this.cards[last_index]];
             last_index -= 1;
         }
