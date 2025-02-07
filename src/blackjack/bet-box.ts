@@ -2,10 +2,13 @@ import {Hand} from "./hand.js"
 import {Player} from "./player.js"
 
 export class BetBox{
+    id!: number;
     player!: Player;
     hands: Hand[] = [];
 
-    constructor(){}
+    constructor(id:number){
+        this.id=id;
+    }
 
     public placeBet(bet: number){
         this.hands.push(new Hand(bet));

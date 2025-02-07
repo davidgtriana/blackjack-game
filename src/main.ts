@@ -5,15 +5,16 @@ import {BetBox} from "./blackjack/bet-box.js"
 import * as Game from "./blackjack/card-game.js";
 
 class BlackjackGame {
-    die: DiceRoller = new DiceRoller(12345);
+    die: DiceRoller = new DiceRoller(2887504248);
 
     MAX_HANDS: number = 4;
     MAX_BET_BOXES: number = 9;
+    BET_BOXES_AMOUNT: number = 4;
     DECKS_PER_SHOE: number = 6;
     DECK_PENETRATION: number = 0.50;
-    MIN_BET: number = 25;
     MAX_BET: number = 750;
-
+    MIN_BET: number = 25;
+    
     IS_EUROPEAN_NO_HOLE_CARD: boolean = true;
     IS_ALLOWED_SURRENDER: boolean = true;
     IS_ALLOWED_DOUBLE_AFTER_SPLIT: boolean = true;
@@ -43,18 +44,18 @@ class BlackjackGame {
         this.discard_pile.add(this.shoe.draw()!);
         
         // -- Create the Bet Boxes
-        for(let i=0; i<this.MAX_BET_BOXES;i++)
-            this.bet_boxes.push(new BetBox());
+        for(let i=0; i<this.BET_BOXES_AMOUNT;i++)
+            this.bet_boxes.push(new BetBox(i+1));
 
         // -- Sit the players
         this.players.push(new Player("Juan"));
-        this.players.push(new Player("David"));
+        //this.players.push(new Player("David"));
         this.bet_boxes[0].player = this.players[0];
-        this.bet_boxes[1].player = this.players[1];
+        //this.bet_boxes[1].player = this.players[1];
 
         // Place your bets
         this.bet_boxes[0].placeBet(25);
-        this.bet_boxes[1].placeBet(25);
+        //this.bet_boxes[1].placeBet(25);
 
         this.initialDealOut();
         this.courseOfPlay();
@@ -63,6 +64,7 @@ class BlackjackGame {
 
 
     public initialDealOut(): void{
+        this.shoe.print();
         // Track Active Hands
         for (let betbox of this.bet_boxes)
             for (let hand of betbox.hands)
@@ -82,10 +84,10 @@ class BlackjackGame {
         // Deal the Secondary Card to Dealer
         if (!this.IS_EUROPEAN_NO_HOLE_CARD) this.dealerHand.hit(this.shoe.draw()!);
 
-        this.shoe.print();
-
+        // Player stands
+        // Dealer Draws
+        this.dealerHand.hit(this.shoe.draw()!);
         this.display();
-
     }
     
     public courseOfPlay() {
@@ -97,15 +99,30 @@ class BlackjackGame {
     }
 
     public display(){
-        // Update dealer hand
-        const element_dealerHand = document.getElementById("dealer-hand");
-        if (!element_dealerHand) return;
+        // Displaying Dealer Hand Value
+        const element_dealerHand_value =  document.getElementById("dealer-hand-value")!;
+        element_dealerHand_value.append(this.dealerHand.getHandValue());
 
-        // Creating Card Image
-        element_dealerHand.appendChild(this.getCardImgElement(this.dealerHand.cards[0]));
+        // Displaying all the cards in the dealer's hand
+        const element_dealerHand = document.getElementById("dealer-hand")!;
+        this.dealerHand.cards.map(card => {
+            element_dealerHand.insertBefore(this.getCardImgElement(card), element_dealerHand.firstChild);
+        });
 
+        // Displaying Dealer's hand in the console
         console.log("Dealer Hand: ");
         this.dealerHand.print();
+
+        // Displaying the Bet Boxes
+        const element_bet_boxes_area = document.getElementById("bet-boxes-area")!;
+        
+        this.bet_boxes.map(betbox => {
+            const element_betbox = document.createElement("div");
+            element_betbox.className = "bet-box";
+            element_betbox.id = "betbox"+betbox.id;
+            element_bet_boxes_area.insertBefore(element_betbox,element_bet_boxes_area.firstChild);
+        });
+
         for (let currentBetBox=0; currentBetBox<this.bet_boxes.length; currentBetBox++){
             let betbox:BetBox = this.bet_boxes[currentBetBox];
             if (betbox.player == null) continue;
@@ -124,8 +141,7 @@ class BlackjackGame {
         let img_type_file: string = ".png";
 
         const cardImg = document.createElement("img");
-        cardImg.width = 60; //60
-        cardImg.height = 90; //90
+        cardImg.className = "card";
         cardImg.src = cards_path+card.toString(false)+img_type_file; 
 
         return cardImg;

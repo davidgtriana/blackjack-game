@@ -5,20 +5,27 @@ body {
     color: black;
 }
 
+.card{
+    width: 60px;
+    height: 90px;
+    margin-bottom: 0;
+}
+
 #dealer-area {
-    width: 100%;
-    margin: 20px 40px;
-    padding: 10px;
+    background-color: lightgray;
+}
+
+#dealer-hand-value {
+    font-size: 30px;
 }
 
 #dealer-hand {
     display: flex;
     justify-content: center;
     gap: 10px;
-    min-height: 120px;
 }
 
-#bet-boxes {
+#bet-boxes-area {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -29,7 +36,7 @@ body {
 .bet-box {
     width: 80px;
     height: 120px;
-    /*border-radius: 50px;*/
+    border-radius: 50px;
     background-color: #2e8b57;
     border: 2px solid white;
     display: flex;

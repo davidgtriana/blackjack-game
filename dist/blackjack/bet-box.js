@@ -1,7 +1,8 @@
 import { Hand } from "./hand.js";
 export class BetBox {
-    constructor() {
+    constructor(id) {
         this.hands = [];
+        this.id = id;
     }
     placeBet(bet) {
         this.hands.push(new Hand(bet));
