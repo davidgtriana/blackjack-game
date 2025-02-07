@@ -8,11 +8,10 @@ body {
 .card{
     width: 60px;
     height: 90px;
-    margin-bottom: 0;
 }
 
 #dealer-area {
-    background-color: lightgray;
+    
 }
 
 #dealer-hand-value {
@@ -28,26 +27,32 @@ body {
 #bet-boxes-area {
     display: flex;
     flex-wrap: wrap;
+    padding-top: 200px;
+    padding-bottom: 30px;
     justify-content: center;
-    gap: 10px;
-    margin-top: 20px;
+    gap: 50px;
 }
 
 .bet-box {
-    width: 80px;
-    height: 120px;
-    border-radius: 50px;
     background-color: #2e8b57;
-    border: 2px solid white;
+    border-radius: 50px;
+    width: 80px;
+    height: 80px;
+
+    position: relative;
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-around;
+    justify-content: center;
 }
 
-.bet-box.occupied {
-    background-color: #8b0000;
+.bet-box .card{
+    position: absolute;
 }
+
+.bet-box .hand-value{
+    padding-top: 10px;
+    font-size: 20px;
+}
+
 
 button {
     padding: 10px 15px;

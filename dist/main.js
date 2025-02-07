@@ -14,6 +14,7 @@ class BlackjackGame {
         this.MAX_BET = 750;
         this.MIN_BET = 25;
         this.IS_EUROPEAN_NO_HOLE_CARD = true;
+        this.IS_HIT_17 = true;
         this.IS_ALLOWED_SURRENDER = true;
         this.IS_ALLOWED_DOUBLE_AFTER_SPLIT = true;
         this.IS_ORIGINAL_BET_ONLY = true;
@@ -61,9 +62,6 @@ class BlackjackGame {
         // Deal the Secondary Card to Dealer
         if (!this.IS_EUROPEAN_NO_HOLE_CARD)
             this.dealerHand.hit(this.shoe.draw());
-        // Player stands
-        // Dealer Draws
-        this.dealerHand.hit(this.shoe.draw());
         this.display();
     }
     courseOfPlay() {
@@ -77,7 +75,7 @@ class BlackjackGame {
         // Displaying all the cards in the dealer's hand
         const element_dealerHand = document.getElementById("dealer-hand");
         this.dealerHand.cards.map(card => {
-            element_dealerHand.insertBefore(this.getCardImgElement(card), element_dealerHand.firstChild);
+            element_dealerHand.insertBefore(this.createCardImgElement(card), element_dealerHand.firstChild);
         });
         // Displaying Dealer's hand in the console
         console.log("Dealer Hand: ");
@@ -87,9 +85,10 @@ class BlackjackGame {
         this.bet_boxes.map(betbox => {
             const element_betbox = document.createElement("div");
             element_betbox.className = "bet-box";
-            element_betbox.id = "betbox" + betbox.id;
+            element_betbox.id = "bet-box-" + betbox.id;
             element_bet_boxes_area.insertBefore(element_betbox, element_bet_boxes_area.firstChild);
         });
+        // Printing Players' Hands in the console
         for (let currentBetBox = 0; currentBetBox < this.bet_boxes.length; currentBetBox++) {
             let betbox = this.bet_boxes[currentBetBox];
             if (betbox.player == null)
@@ -100,8 +99,30 @@ class BlackjackGame {
                 hand.print(currentHand + 1);
             }
         }
+        // Displaying Bet Boxes
+        for (let currentBetBox = 0; currentBetBox < this.BET_BOXES_AMOUNT; currentBetBox++) {
+            const betbox = this.bet_boxes[currentBetBox];
+            if (betbox.player == null)
+                continue;
+            const hand = betbox.hands[0];
+            const element_bet_box = document.getElementById("bet-box-" + betbox.id);
+            // Displaying Hand Value of this Hand
+            const element_hand_value = document.createElement("div");
+            element_hand_value.className = "hand-value";
+            element_hand_value.append(hand.getHandValue());
+            element_bet_box.appendChild(element_hand_value);
+            // Displaying Cards of this Hand
+            for (let currentCard = 0; currentCard < hand.cards.length; currentCard++) {
+                const card = hand.cards[currentCard];
+                const element_card = this.createCardImgElement(card);
+                const top_offset = 90;
+                element_card.style.top = (-top_offset + (currentCard * -30)).toString() + "px";
+                element_card.style.left = (currentCard * 35).toString() + "px";
+                element_bet_box.appendChild(element_card);
+            }
+        }
     }
-    getCardImgElement(card) {
+    createCardImgElement(card) {
         // Card Images Origin h: 240 w: 160
         let cards_path = "./assets/cards/";
         let img_type_file = ".png";

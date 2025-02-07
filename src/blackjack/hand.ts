@@ -39,7 +39,7 @@ export class Hand{
     public insurance(): void{}
 
     public print(id?:number){
-        console.log("Hand No. "+(id?id:0)+ ": Points: " + this.total + " Wager: $" + this.bet + " Cards: " + this.cards.map(card => card.toString(true)).join(" | "));
+        console.log("Hand No. "+(id?id:0)+ ": Points: " + this.getHandValue() + " Wager: $" + this.bet + " Cards: " + this.cards.map(card => card.toString(true)).join(" | "));
     }
     
     public getHandValue():string{

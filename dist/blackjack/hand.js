@@ -32,7 +32,7 @@ export class Hand {
     surrender() { }
     insurance() { }
     print(id) {
-        console.log("Hand No. " + (id ? id : 0) + ": Points: " + this.total + " Wager: $" + this.bet + " Cards: " + this.cards.map(card => card.toString(true)).join(" | "));
+        console.log("Hand No. " + (id ? id : 0) + ": Points: " + this.getHandValue() + " Wager: $" + this.bet + " Cards: " + this.cards.map(card => card.toString(true)).join(" | "));
     }
     getHandValue() {
         if (this.cards.length == 0)
