@@ -26,7 +26,6 @@ class BlackjackGame {
         this.shoe.shuffle(this.die);
         // -- Burning Card
         this.discard_pile.push(this.shoe.draw());
-        this.shoe.print();
         // -- Create the Bet Boxes
         for (let i = 0; i < this.MAX_BET_BOXES; i++)
             this.bet_boxes.push(new BetBox());
@@ -62,6 +61,11 @@ class BlackjackGame {
     payAndTake() {
     }
     display() {
+        // Update dealer hand
+        const lblDealerHand = document.getElementById("dealer-hand");
+        if (!lblDealerHand)
+            return;
+        lblDealerHand.innerText = this.dealer.cards.map(card => card.toString()).join(" | ");
         console.log();
         console.log("Dealer Hand: " + this.dealer.cards.map(card => card.toString()).join(" | "));
         for (let currentBetBox = 0; currentBetBox < this.bet_boxes.length; currentBetBox++) {

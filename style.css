@@ -1,0 +1,57 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: lightseagreen;
+    color: black;
+}
+
+#dealer-area {
+    width: 100%;
+    margin: 20px 40px;
+    padding: 10px;
+}
+
+#dealer-hand {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    min-height: 120px;
+}
+
+#bet-boxes {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.bet-box {
+    width: 60px;
+    height: 60px;
+    border-radius: 50px;
+    background-color: #2e8b57;
+    border: 2px solid white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+}
+
+.bet-box.occupied {
+    background-color: #8b0000;
+}
+
+button {
+    padding: 10px 15px;
+    margin: 5px;
+    font-size: 16px;
+    background-color: #fff;
+    border: 2px solid black;
+    cursor: pointer;
+}
+
+button:disabled {
+    background-color: gray;
+    cursor: not-allowed;
+}
