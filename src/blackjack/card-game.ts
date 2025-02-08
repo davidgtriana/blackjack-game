@@ -50,10 +50,12 @@ export class StackCard {
   }
 
   public shuffle (die:DiceRoller): void{
+    
     /* Fisher-Yates Modern Version */
     let last_index:number = this.cards.length-1;
+    
     while (last_index > 0){
-      let rand_index=die.roll(last_index+1);
+      let rand_index = die.roll(last_index+1);
       [this.cards[last_index], this.cards[rand_index]] = [this.cards[rand_index], this.cards[last_index]];
       last_index -= 1;
     }

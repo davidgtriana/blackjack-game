@@ -3,9 +3,10 @@ import { Hand } from "./blackjack/hand.js";
 import { Player } from "./blackjack/player.js";
 import { BetBox } from "./blackjack/bet-box.js";
 import * as Game from "./blackjack/card-game.js";
+let DEBUG_MODE = true;
 class BlackjackGame {
     constructor() {
-        this.die = new DiceRoller(2887504248);
+        this.die = new DiceRoller(12345);
         this.MAX_HANDS = 4;
         this.MAX_BET_BOXES = 9;
         this.BET_BOXES_AMOUNT = 4;
@@ -21,7 +22,6 @@ class BlackjackGame {
         this.players = [];
         this.bet_boxes = [];
         this.active_hands = [];
-        console.log("Seed: " + this.die.getSeed);
         // Start the table
         this.initializeTable();
         // Start New Shoe
@@ -46,7 +46,7 @@ class BlackjackGame {
             const element_betbox = document.createElement("div");
             element_betbox.className = "bet-box";
             element_betbox.id = "bet-box-" + betbox.id;
-            element_bet_boxes_area.insertBefore(element_betbox, element_bet_boxes_area.firstChild);
+            element_bet_boxes_area.append(element_betbox);
         }
     }
     startNewShoe() {
@@ -85,7 +85,7 @@ class BlackjackGame {
                 this.active_hands.push(hand);
                 const element_hand = document.createElement("div");
                 element_hand.className = "hand" + " hand-" + (currentHand + 1);
-                element_betbox.insertBefore(element_hand, element_betbox.firstChild);
+                element_betbox.appendChild(element_hand);
                 // Initialize Element of the Hand
                 const element_hand_value = document.createElement("div");
                 element_hand_value.className = "value";
@@ -107,9 +107,8 @@ class BlackjackGame {
             this.hitHand(hand, this.shoe.draw());
         // Deal the Secondary Card to Dealer
         //if (!this.IS_EUROPEAN_NO_HOLE_CARD) this.dealerHand.hit(this.shoe.draw()!);
-        //this.displayConsole();
-        this.hitHand(this.dealerHand, this.shoe.draw(), "dealer");
-        this.hitHand(this.dealerHand, this.shoe.draw(), "dealer");
+        if (DEBUG_MODE)
+            this.displayConsole();
     }
     hitHand(hand, card, entity = "player") {
         hand.hit(card);
@@ -126,7 +125,6 @@ class BlackjackGame {
         // Add Card Element
         //const element_hand = element_area.querySelector(`.hand${entity === "player" ? `-` + hand.id : ``}`);
         const element_hand = element_area.querySelector(".hand" + (entity == "player" ? "-" + hand.id.toString() : ""));
-        console.log(element_hand);
         if (element_hand) {
             const top_offset = 90;
             element_card.style.top = `${-top_offset + card_id * -30}px`;
@@ -140,6 +138,7 @@ class BlackjackGame {
     payAndTake() {
     }
     displayConsole() {
+        console.log("Seed: " + this.die.getSeed());
         // Displaying Dealer's hand in the console
         console.log("Dealer Hand: ");
         this.dealerHand.print();
