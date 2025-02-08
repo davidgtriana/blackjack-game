@@ -75,7 +75,6 @@ class BlackjackGame {
 
         // -- Burning Card
         this.discard_pile.add(this.shoe.draw()!);
-
     }
 
     public seatPlayers() {
@@ -127,8 +126,6 @@ class BlackjackGame {
             }
         }
 
-        this.shoe.print();
-
         // Deal the Primary Card to Players
         for (let hand of this.active_hands)
             this.hitHand(hand,this.shoe.draw()!);
@@ -145,47 +142,39 @@ class BlackjackGame {
         //if (!this.IS_EUROPEAN_NO_HOLE_CARD) this.dealerHand.hit(this.shoe.draw()!);
         
         //this.displayConsole();
+
+        this.hitHand(this.dealerHand,this.shoe.draw()!,"dealer");
+        this.hitHand(this.dealerHand,this.shoe.draw()!,"dealer");
     }
 
-    public hitHand(hand: Hand, card: Game.Card, entity?:string) {
-        if (!entity) entity="player";
+    public hitHand(hand: Hand, card: Game.Card, entity: string = "player") {
         hand.hit(card);
-        const card_id = hand.cards.length-1;
-        const element_card = this.createCardImgElement(card,card_id+1);
+        const card_id = hand.cards.length - 1;
+        const element_card = this.createCardImgElement(card, card_id + 1);
         
-        if(entity == "dealer"){
-            const element_dealer_area = document.getElementById("dealer-area");
-            
-            // Updating Hand Value of the dealer
-            const element_value = element_dealer_area?.querySelector(".value");
-            if (element_value) element_value.innerHTML = "";
-            element_value?.append(this.dealerHand.getHandValue());
-
-            // Add Card Element to the Hand Element of the dealer
-            const element_hand = element_dealer_area?.querySelector(".hand");
-            element_hand?.insertBefore(element_card,element_hand.firstChild);
-        }
-
-        if(entity == "player"){
-            // Getting access to the Hand Elements
-            const element_bet_box = document.getElementById("bet-box-"+hand.betbox_id);
-            const element_hand = element_bet_box?.querySelector(".hand-"+hand.id);
-
-            // Updating Hand Value
-            const element_value = element_hand?.querySelector(".value");
-            if (element_value) element_value.innerHTML = "";
-            element_value?.append(hand.getHandValue());
-
-            // Add Card Element to the Hand Element
+        let element_area = entity === "dealer" 
+            ? document.getElementById("dealer-area") : document.getElementById(`bet-box-${hand.betbox_id}`);
+        if (!element_area) return;
+        
+        // Update Hand Value
+        const element_value = element_area.querySelector(".value");
+        if (element_value) element_value.textContent = hand.getHandValue();
+        
+        // Add Card Element
+        //const element_hand = element_area.querySelector(`.hand${entity === "player" ? `-` + hand.id : ``}`);
+        const element_hand = element_area.querySelector(".hand" + (entity=="player"?"-"+hand.id.toString():""));
+        console.log(element_hand);
+        if (element_hand) {
             const top_offset = 90;
-            element_card.style.top = (-top_offset+(card_id*-30)).toString()+"px";
-            element_card.style.left = (card_id*35).toString()+"px";
-            element_hand?.appendChild(element_card);
+            element_card.style.top = `${-top_offset + card_id * -30}px`;
+            element_card.style.left = `${card_id * 35}px`;
+            element_hand.appendChild(element_card);
         }
-    }
+    }    
+    
     
     public courseOfPlay() {
-        //iterate through each active hand and ask them what they want to do
+        // Iterate through each active hand and ask them what they want to do
 
     }
     
@@ -225,12 +214,6 @@ class BlackjackGame {
         return cardImg;
     }
 }
-
-
-
-
-
-
 let game = new BlackjackGame();
 
 

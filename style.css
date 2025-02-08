@@ -23,6 +23,7 @@ body {
 
 #dealer-area .hand {
     display: flex;
+    flex-direction: row-reverse;
     justify-content: center;
     gap: 10px;
 }
