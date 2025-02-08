@@ -38,15 +38,14 @@ class BlackjackGame {
         // Start the table
         this.initializeTable();
 
-        // Start New Shoe
-        this.startNewShoe();
-
         // Sit the players
         this.seatPlayers();
+
+        // Start New Shoe
+        this.startNewShoe();
         
-        this.initialDealOut();
-        this.courseOfPlay();
-        this.payAndTake();
+        //this.courseOfPlay();
+        //this.payAndTake();
     }
     
     public initializeTable(){
@@ -69,40 +68,27 @@ class BlackjackGame {
         }
     }
 
-    public startNewShoe() {
-        
-        // -- Prepare the Shoe
-        this.shoe = new Game.StackCard(this.DECKS_PER_SHOE);
-        this.shoe.shuffle(this.die);
-
-        // -- Burning Card
-        this.discard_pile.add(this.shoe.draw()!);
-    }
-
     public seatPlayers() {
 
         // Create Players
         this.players.push(new Player("Juan"));
-        this.players.push(new Player("David"));
-        this.players.push(new Player("Godoy"));
-        this.players.push(new Player("Triana"));
+        //this.players.push(new Player("David"));
+        //this.players.push(new Player("Godoy"));
+        //this.players.push(new Player("Triana"));
 
         // Assigning a player per Bet Box
-        for (let i=0;i<4;i++){
+        for (let i=0;i<this.players.length;i++){
             //if (i==2) continue;
             this.bet_boxes[i].player = this.players[i];
         }
 
         // Place Player Bets
-        for (let i=0;i<4;i++){
+        for (let i=0;i<this.players.length;i++){
             //if (i==2) continue;
             this.bet_boxes[i].placeBet(25);// Creates the first Hand of this bet box
         }
-    }
 
-    public initialDealOut(): void{
-
-        // Track Active Hands and Instantiate HTML Elements for Active Hands
+        // Iterate through each Bet Box with a hand to create its Hand Elements
         for (let betbox of this.bet_boxes){
             if (betbox.player == null) continue;
             const element_betbox = document.getElementById("bet-box-"+betbox.id)!;
@@ -110,7 +96,6 @@ class BlackjackGame {
             // Displaying Hand Element Per Bet Box
             for(let currentHand = 0; currentHand < betbox.hands.length ; currentHand++){
                 const hand = betbox.hands[currentHand];
-                this.active_hands.push(hand);
                 const element_hand = document.createElement("div");
                 element_hand.className = "hand"+" hand-"+(currentHand+1);
                 element_betbox.appendChild(element_hand);
@@ -128,17 +113,39 @@ class BlackjackGame {
             }
         }
 
+
+    }
+
+    public startNewShoe() {
+        
+        // -- Prepare the Shoe
+        this.shoe = new Game.StackCard(this.DECKS_PER_SHOE);
+        this.shoe.shuffle(this.die);
+
+        // -- Burning Card
+        this.discard_pile.add(this.shoe.draw()!);
+    }
+
+    public initialDealOut(): void{
+
+        // Track Active Hands
+        for (let betbox of this.bet_boxes){
+            if (betbox.player == null) continue;
+            for (let hand of betbox.hands)
+                this.active_hands.push(hand);
+        }
+
         // Deal the Primary Card to Players
         for (let hand of this.active_hands)
             this.hitHand(hand,this.shoe.draw()!);
             
 
         // Deal the Primary Card to Dealer
-        this.hitHand(this.dealerHand,this.shoe.draw()!,"dealer");
+        //this.hitHand(this.dealerHand,this.shoe.draw()!,"dealer");
 
         // Deal the Secondary Card to Players
-        for (let hand of this.active_hands)
-            this.hitHand(hand,this.shoe.draw()!);
+        //for (let hand of this.active_hands)
+        //    this.hitHand(hand,this.shoe.draw()!);
             
         // Deal the Secondary Card to Dealer
         //if (!this.IS_EUROPEAN_NO_HOLE_CARD) this.dealerHand.hit(this.shoe.draw()!);
@@ -167,6 +174,16 @@ class BlackjackGame {
             element_card.style.top = `${-top_offset + card_id * -30}px`;
             element_card.style.left = `${card_id * 35}px`;
             element_hand.appendChild(element_card);
+
+            console.log(gsap);
+            /*gsap.set(element_card,{
+                position: "absolute",
+                top: "-500px",
+                left: "300px",
+                opacity: 0,
+                scale: 0.8,
+                rotation: gsap.utils.random(-100, 100),
+            });*/
         }
     }    
     
@@ -216,6 +233,9 @@ class BlackjackGame {
 let game = new BlackjackGame();
 
 
+document.getElementById("btn-deal")?.addEventListener("click", () => {
+    game.initialDealOut();
+});
 
 
 

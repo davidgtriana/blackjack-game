@@ -26,6 +26,7 @@
         <link rel="stylesheet" type="text/css" href="style.css" />
 
         <!-- Scripts  -->
+        <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js" defer></script>
         <script src="https://kit.fontawesome.com/082c565d5c.js" crossorigin="anonymous"></script>
 
         <!--TODO:
@@ -57,12 +58,13 @@
 
     <!-- Action Buttons for Course of Play -->
     <div id="buttons-area">
-        <button id="hit-btn" disabled>Hit</button>
-        <button id="stand-btn" disabled>Stand</button>
-        <button id="double-btn" disabled>Double</button>
-        <button id="split-btn" disabled>Split</button>
-        <button id="surrender-btn" disabled>Surrender</button>
-        <button id="insurance-btn" disabled>Insurance</button>
+        <button class="btn" id="btn-deal">Deal</button>
+        <button class="btn" id="btn-hit">Hit</button>
+        <button class="btn" id="btn-stand">Stand</button>
+        <button class="btn" id="btn-double">Double</button>
+        <button class="btn" id="btn-split">Split</button>
+        <button class="btn" id="btn-surrender">Surrender</button>
+        <button class="btn" id="btn-insurance">Insurance</button>
     </div>
 
         <script id="site" type="module" src="/dist/main.js"></script>

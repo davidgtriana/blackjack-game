@@ -15,6 +15,7 @@ body {
 #dealer-area {
     background-color: lightgrey;
     padding: 10px 10px;
+    height: 150px;
 }
 
 #dealer-area .value{
@@ -87,16 +88,15 @@ body {
 }
 
 
-button {
-    padding: 10px 15px;
-    margin: 5px;
+.btn {
+    width: 150px;
+    padding: 10px;
     font-size: 16px;
-    background-color: #fff;
-    border: 2px solid black;
+    font-weight: bold;
     cursor: pointer;
 }
 
-button:disabled {
+.btn:disabled {
     background-color: gray;
     cursor: not-allowed;
 }
