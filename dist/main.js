@@ -1,28 +1,31 @@
-var _a;
 import { DiceRoller } from "./blackjack/dice-roller.js";
 import { Hand } from "./blackjack/hand.js";
 import { Player } from "./blackjack/player.js";
 import { BetBox } from "./blackjack/bet-box.js";
 import * as Game from "./blackjack/card-game.js";
 let DEBUG_MODE = true;
+let dealSound = document.getElementById("deal-sound");
 class BlackjackGame {
+    die = new DiceRoller(12345);
+    MAX_HANDS = 4;
+    MAX_BET_BOXES = 9;
+    BET_BOXES_AMOUNT = 4;
+    DECKS_PER_SHOE = 1;
+    DECK_PENETRATION = 0.50;
+    MAX_BET = 750;
+    MIN_BET = 25;
+    IS_EUROPEAN_NO_HOLE_CARD = true;
+    IS_HIT_17 = true;
+    IS_ALLOWED_SURRENDER = true;
+    IS_ALLOWED_DOUBLE_AFTER_SPLIT = true;
+    IS_ORIGINAL_BET_ONLY = true;
+    shoe;
+    discard_pile;
+    dealerHand;
+    players = [];
+    bet_boxes = [];
+    active_hands = [];
     constructor() {
-        this.die = new DiceRoller(12345);
-        this.MAX_HANDS = 4;
-        this.MAX_BET_BOXES = 9;
-        this.BET_BOXES_AMOUNT = 4;
-        this.DECKS_PER_SHOE = 1;
-        this.DECK_PENETRATION = 0.50;
-        this.MAX_BET = 750;
-        this.MIN_BET = 25;
-        this.IS_EUROPEAN_NO_HOLE_CARD = true;
-        this.IS_HIT_17 = true;
-        this.IS_ALLOWED_SURRENDER = true;
-        this.IS_ALLOWED_DOUBLE_AFTER_SPLIT = true;
-        this.IS_ORIGINAL_BET_ONLY = true;
-        this.players = [];
-        this.bet_boxes = [];
-        this.active_hands = [];
         // Start the table
         this.initializeTable();
         // Sit the players
@@ -52,8 +55,8 @@ class BlackjackGame {
     seatPlayers() {
         // Create Players
         this.players.push(new Player("Juan"));
-        //this.players.push(new Player("David"));
-        //this.players.push(new Player("Godoy"));
+        this.players.push(new Player("David"));
+        this.players.push(new Player("Godoy"));
         //this.players.push(new Player("Triana"));
         // Assigning a player per Bet Box
         for (let i = 0; i < this.players.length; i++) {
@@ -95,7 +98,7 @@ class BlackjackGame {
         // -- Burning Card
         this.discard_pile.add(this.shoe.draw());
     }
-    initialDealOut() {
+    async initialDealOut() {
         // Track Active Hands
         for (let betbox of this.bet_boxes) {
             if (betbox.player == null)
@@ -105,18 +108,26 @@ class BlackjackGame {
         }
         // Deal the Primary Card to Players
         for (let hand of this.active_hands)
-            this.hitHand(hand, this.shoe.draw());
+            await this.hitHand(hand, this.shoe.draw());
         // Deal the Primary Card to Dealer
-        //this.hitHand(this.dealerHand,this.shoe.draw()!,"dealer");
+        await this.hitHand(this.dealerHand, this.shoe.draw(), "dealer");
         // Deal the Secondary Card to Players
-        //for (let hand of this.active_hands)
-        //    this.hitHand(hand,this.shoe.draw()!);
+        for (let hand of this.active_hands)
+            await this.hitHand(hand, this.shoe.draw());
         // Deal the Secondary Card to Dealer
         //if (!this.IS_EUROPEAN_NO_HOLE_CARD) this.dealerHand.hit(this.shoe.draw()!);
         if (DEBUG_MODE)
             this.displayConsole();
     }
-    hitHand(hand, card, entity = "player") {
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    async hitHand(hand, card, entity = "player") {
+        await this.delay(200); // 🕒 Wait 1 second before dealing
+        if (!dealSound)
+            return;
+        dealSound.currentTime = 0;
+        dealSound.play();
         hand.hit(card);
         const card_id = hand.cards.length - 1;
         const element_card = this.createCardImgElement(card, card_id + 1);
@@ -133,18 +144,44 @@ class BlackjackGame {
         const element_hand = element_area.querySelector(".hand" + (entity == "player" ? "-" + hand.id.toString() : ""));
         if (element_hand) {
             const top_offset = 90;
-            element_card.style.top = `${-top_offset + card_id * -30}px`;
-            element_card.style.left = `${card_id * 35}px`;
             element_hand.appendChild(element_card);
-            console.log(gsap);
-            /*gsap.set(element_card,{
-                position: "absolute",
-                top: "-500px",
-                left: "300px",
-                opacity: 0,
-                scale: 0.8,
-                rotation: gsap.utils.random(-100, 100),
-            });*/
+            if (entity == "player") {
+                gsap.set(element_card, {
+                    position: "absolute",
+                    top: "-400px",
+                    left: "0px",
+                    opacity: 0,
+                    rotation: gsap.utils.random(-100, 100),
+                });
+                gsap.to(element_card, {
+                    position: "absolute",
+                    duration: 0.7,
+                    opacity: 1,
+                    top: `${-top_offset + card_id * -30}px`,
+                    left: `${card_id * 35}px`,
+                    rotation: 0,
+                    ease: "power2.out"
+                });
+            }
+            if (entity == "dealer") {
+                gsap.set(element_card, {
+                    position: "absolute",
+                    top: "-100px",
+                    left: "200px",
+                    opacity: 0,
+                    scale: 1,
+                    rotation: gsap.utils.random(-100, 100),
+                });
+                gsap.to(element_card, {
+                    position: "relative",
+                    duration: 0.7,
+                    opacity: 1,
+                    top: 0,
+                    left: 0,
+                    rotation: 0,
+                    ease: "power2.out"
+                });
+            }
         }
     }
     courseOfPlay() {
@@ -180,6 +217,8 @@ class BlackjackGame {
     }
 }
 let game = new BlackjackGame();
-(_a = document.getElementById("btn-deal")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
+document.getElementById("btn-deal")?.addEventListener("click", () => {
     game.initialDealOut();
+});
+document.getElementById("btn-hit")?.addEventListener("click", () => {
 });

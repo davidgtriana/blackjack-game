@@ -4,7 +4,10 @@ import {Player} from "./blackjack/player.js"
 import {BetBox} from "./blackjack/bet-box.js"
 import * as Game from "./blackjack/card-game.js";
 
+declare const gsap: any; // 👈 This tells TypeScript to ignore the missing import
+
 let DEBUG_MODE: boolean = true;
+let dealSound = document.getElementById("deal-sound") as HTMLAudioElement;
 
 class BlackjackGame {
     die: DiceRoller = new DiceRoller(12345);
@@ -72,8 +75,8 @@ class BlackjackGame {
 
         // Create Players
         this.players.push(new Player("Juan"));
-        //this.players.push(new Player("David"));
-        //this.players.push(new Player("Godoy"));
+        this.players.push(new Player("David"));
+        this.players.push(new Player("Godoy"));
         //this.players.push(new Player("Triana"));
 
         // Assigning a player per Bet Box
@@ -126,7 +129,7 @@ class BlackjackGame {
         this.discard_pile.add(this.shoe.draw()!);
     }
 
-    public initialDealOut(): void{
+    public async initialDealOut(){
 
         // Track Active Hands
         for (let betbox of this.bet_boxes){
@@ -137,15 +140,15 @@ class BlackjackGame {
 
         // Deal the Primary Card to Players
         for (let hand of this.active_hands)
-            this.hitHand(hand,this.shoe.draw()!);
+            await this.hitHand(hand,this.shoe.draw()!);
             
 
         // Deal the Primary Card to Dealer
-        //this.hitHand(this.dealerHand,this.shoe.draw()!,"dealer");
+        await this.hitHand(this.dealerHand,this.shoe.draw()!,"dealer");
 
         // Deal the Secondary Card to Players
-        //for (let hand of this.active_hands)
-        //    this.hitHand(hand,this.shoe.draw()!);
+        for (let hand of this.active_hands)
+            await this.hitHand(hand,this.shoe.draw()!);
             
         // Deal the Secondary Card to Dealer
         //if (!this.IS_EUROPEAN_NO_HOLE_CARD) this.dealerHand.hit(this.shoe.draw()!);
@@ -153,7 +156,15 @@ class BlackjackGame {
         if (DEBUG_MODE) this.displayConsole();
     }
 
-    public hitHand(hand: Hand, card: Game.Card, entity: string = "player") {
+    delay(ms: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    
+    public async hitHand(hand: Hand, card: Game.Card, entity: string = "player") {
+        await this.delay(200); // 🕒 Wait 1 second before dealing
+        if (!dealSound) return;
+        dealSound.currentTime = 0;
+        dealSound.play();    
         hand.hit(card);
         const card_id = hand.cards.length - 1;
         const element_card = this.createCardImgElement(card, card_id + 1);
@@ -171,19 +182,46 @@ class BlackjackGame {
         const element_hand = element_area.querySelector(".hand" + (entity=="player"?"-"+hand.id.toString():""));
         if (element_hand) {
             const top_offset = 90;
-            element_card.style.top = `${-top_offset + card_id * -30}px`;
-            element_card.style.left = `${card_id * 35}px`;
             element_hand.appendChild(element_card);
+            
 
-            console.log(gsap);
-            /*gsap.set(element_card,{
-                position: "absolute",
-                top: "-500px",
-                left: "300px",
-                opacity: 0,
-                scale: 0.8,
-                rotation: gsap.utils.random(-100, 100),
-            });*/
+            if(entity=="player"){
+                gsap.set(element_card,{
+                    position: "absolute",
+                    top: "-400px",
+                    left: "0px",
+                    opacity: 0,
+                    rotation: gsap.utils.random(-100, 100),
+                });
+                gsap.to(element_card, {
+                    position: "absolute",
+                    duration: 0.7,
+                    opacity: 1,
+                    top: `${-top_offset + card_id * -30}px`,
+                    left: `${card_id * 35}px`,
+                    rotation: 0,
+                    ease: "power2.out"
+                });
+            }
+            if(entity=="dealer"){
+                gsap.set(element_card,{
+                    position: "absolute",
+                    top: "-100px",
+                    left: "200px",
+                    opacity: 0,
+                    scale: 1,
+                    rotation: gsap.utils.random(-100, 100),
+                });
+                gsap.to(element_card, {
+                    position: "relative",
+                    duration: 0.7,
+                    opacity: 1,
+                    top: 0,
+                    left: 0,
+                    rotation: 0,
+                    ease: "power2.out"
+                });
+            }
         }
     }    
     
@@ -236,6 +274,8 @@ let game = new BlackjackGame();
 document.getElementById("btn-deal")?.addEventListener("click", () => {
     game.initialDealOut();
 });
-
+document.getElementById("btn-hit")?.addEventListener("click", () => {
+    
+});
 
 

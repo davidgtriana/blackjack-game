@@ -1,11 +1,11 @@
 export class Hand {
+    cards = [];
+    bet = 0;
+    id = 0;
+    betbox_id = 0;
+    total = 0;
+    ace_count = 0;
     constructor(bet, id, betbox_id) {
-        this.cards = [];
-        this.bet = 0;
-        this.id = 0;
-        this.betbox_id = 0;
-        this.total = 0;
-        this.ace_count = 0;
         this.bet = bet;
         this.id = id;
         this.betbox_id = betbox_id;

@@ -1,6 +1,8 @@
 export class DiceRoller {
+    initial_seed;
+    seed;
     constructor(seed) {
-        this.initial_seed = seed !== null && seed !== void 0 ? seed : (Math.random() * 2 ** 32) >>> 0;
+        this.initial_seed = seed ?? (Math.random() * 2 ** 32) >>> 0;
         this.seed = this.initial_seed;
     }
     roll(min, max) {

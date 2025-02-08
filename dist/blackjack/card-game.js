@@ -1,4 +1,6 @@
 export class Card {
+    suit;
+    value;
     constructor(suit, value) {
         this.suit = suit;
         this.value = value;
@@ -12,8 +14,11 @@ export class Card {
     }
 }
 export class StackCard {
+    cards = [];
+    amount_of_cards;
+    amount_of_cards_used;
+    amount_of_decks;
     constructor(amount_of_decks) {
-        this.cards = [];
         this.amount_of_decks = amount_of_decks;
         for (let i = 0; i < this.amount_of_decks; i++)
             this.createDeck();
