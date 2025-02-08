@@ -9,7 +9,7 @@ class BlackjackGame {
         this.MAX_HANDS = 4;
         this.MAX_BET_BOXES = 9;
         this.BET_BOXES_AMOUNT = 4;
-        this.DECKS_PER_SHOE = 6;
+        this.DECKS_PER_SHOE = 1;
         this.DECK_PENETRATION = 0.50;
         this.MAX_BET = 750;
         this.MIN_BET = 25;
@@ -23,71 +23,135 @@ class BlackjackGame {
         this.active_hands = [];
         console.log("Seed: " + this.die.getSeed);
         // Start the table
-        this.dealerHand = new Hand(0);
+        this.initializeTable();
+        // Start New Shoe
+        this.startNewShoe();
+        // Sit the players
+        this.seatPlayers();
+        this.initialDealOut();
+        this.courseOfPlay();
+        this.payAndTake();
+    }
+    initializeTable() {
+        // Creates Objects
+        this.dealerHand = new Hand(0, 0, 0);
         this.discard_pile = new Game.StackCard(0);
+        // -- Create the Bet Boxes
+        for (let i = 0; i < this.BET_BOXES_AMOUNT; i++)
+            this.bet_boxes.push(new BetBox(i + 1));
+        // Instantiate Bet Boxes HTML Elements
+        const element_bet_boxes_area = document.getElementById("bet-boxes-area");
+        for (let currentBetBox = 0; currentBetBox < this.BET_BOXES_AMOUNT; currentBetBox++) {
+            const betbox = this.bet_boxes[currentBetBox];
+            const element_betbox = document.createElement("div");
+            element_betbox.className = "bet-box";
+            element_betbox.id = "bet-box-" + betbox.id;
+            element_bet_boxes_area.insertBefore(element_betbox, element_bet_boxes_area.firstChild);
+        }
+    }
+    startNewShoe() {
         // -- Prepare the Shoe
         this.shoe = new Game.StackCard(this.DECKS_PER_SHOE);
         this.shoe.shuffle(this.die);
         // -- Burning Card
         this.discard_pile.add(this.shoe.draw());
-        // -- Create the Bet Boxes
-        for (let i = 0; i < this.BET_BOXES_AMOUNT; i++)
-            this.bet_boxes.push(new BetBox(i + 1));
-        // -- Sit the players
+    }
+    seatPlayers() {
+        // Create Players
         this.players.push(new Player("Juan"));
-        //this.players.push(new Player("David"));
-        this.bet_boxes[0].player = this.players[0];
-        //this.bet_boxes[1].player = this.players[1];
-        // Place your bets
-        this.bet_boxes[0].placeBet(25);
-        //this.bet_boxes[1].placeBet(25);
-        this.initialDealOut();
-        this.courseOfPlay();
-        this.payAndTake();
+        this.players.push(new Player("David"));
+        this.players.push(new Player("Godoy"));
+        this.players.push(new Player("Triana"));
+        // Assigning a player per Bet Box
+        for (let i = 0; i < 4; i++) {
+            //if (i==2) continue;
+            this.bet_boxes[i].player = this.players[i];
+        }
+        // Place Player Bets
+        for (let i = 0; i < 4; i++) {
+            //if (i==2) continue;
+            this.bet_boxes[i].placeBet(25); // Creates the first Hand of this bet box
+        }
     }
     initialDealOut() {
+        // Track Active Hands and Instantiate HTML Elements for Active Hands
+        for (let betbox of this.bet_boxes) {
+            if (betbox.player == null)
+                continue;
+            const element_betbox = document.getElementById("bet-box-" + betbox.id);
+            // Displaying Hand Element Per Bet Box
+            for (let currentHand = 0; currentHand < betbox.hands.length; currentHand++) {
+                const hand = betbox.hands[currentHand];
+                this.active_hands.push(hand);
+                const element_hand = document.createElement("div");
+                element_hand.className = "hand" + " hand-" + (currentHand + 1);
+                element_betbox.insertBefore(element_hand, element_betbox.firstChild);
+                // Initialize Element of the Hand
+                const element_hand_value = document.createElement("div");
+                element_hand_value.className = "value";
+                element_hand_value.append(hand.getHandValue());
+                element_hand.appendChild(element_hand_value);
+                const element_hand_bet = document.createElement("div");
+                element_hand_bet.className = "bet";
+                element_hand_bet.append(hand.bet.toString());
+                element_hand.appendChild(element_hand_bet);
+            }
+        }
         this.shoe.print();
-        // Track Active Hands
-        for (let betbox of this.bet_boxes)
-            for (let hand of betbox.hands)
-                this.active_hands.push(betbox.hands[0]);
         // Deal the Primary Card to Players
         for (let hand of this.active_hands)
-            hand.hit(this.shoe.draw());
+            this.hitHand(hand, this.shoe.draw());
         // Deal the Primary Card to Dealer
-        this.dealerHand.hit(this.shoe.draw());
+        this.hitHand(this.dealerHand, this.shoe.draw(), "dealer");
         // Deal the Secondary Card to Players
         for (let hand of this.active_hands)
-            hand.hit(this.shoe.draw());
+            this.hitHand(hand, this.shoe.draw());
         // Deal the Secondary Card to Dealer
-        if (!this.IS_EUROPEAN_NO_HOLE_CARD)
-            this.dealerHand.hit(this.shoe.draw());
-        this.display();
+        //if (!this.IS_EUROPEAN_NO_HOLE_CARD) this.dealerHand.hit(this.shoe.draw()!);
+        //this.displayConsole();
+    }
+    hitHand(hand, card, entity) {
+        if (!entity)
+            entity = "player";
+        hand.hit(card);
+        const card_id = hand.cards.length - 1;
+        const element_card = this.createCardImgElement(card, card_id + 1);
+        if (entity == "dealer") {
+            const element_dealer_area = document.getElementById("dealer-area");
+            // Updating Hand Value of the dealer
+            const element_value = element_dealer_area === null || element_dealer_area === void 0 ? void 0 : element_dealer_area.querySelector(".value");
+            if (element_value)
+                element_value.innerHTML = "";
+            element_value === null || element_value === void 0 ? void 0 : element_value.append(this.dealerHand.getHandValue());
+            // Add Card Element to the Hand Element of the dealer
+            const element_hand = element_dealer_area === null || element_dealer_area === void 0 ? void 0 : element_dealer_area.querySelector(".hand");
+            element_hand === null || element_hand === void 0 ? void 0 : element_hand.insertBefore(element_card, element_hand.firstChild);
+        }
+        if (entity == "player") {
+            // Getting access to the Hand Elements
+            const element_bet_box = document.getElementById("bet-box-" + hand.betbox_id);
+            const element_hand = element_bet_box === null || element_bet_box === void 0 ? void 0 : element_bet_box.querySelector(".hand-" + hand.id);
+            // Updating Hand Value
+            const element_value = element_hand === null || element_hand === void 0 ? void 0 : element_hand.querySelector(".value");
+            if (element_value)
+                element_value.innerHTML = "";
+            element_value === null || element_value === void 0 ? void 0 : element_value.append(hand.getHandValue());
+            // Add Card Element to the Hand Element
+            const top_offset = 90;
+            element_card.style.top = (-top_offset + (card_id * -30)).toString() + "px";
+            element_card.style.left = (card_id * 35).toString() + "px";
+            element_hand === null || element_hand === void 0 ? void 0 : element_hand.appendChild(element_card);
+        }
     }
     courseOfPlay() {
+        //iterate through each active hand and ask them what they want to do
     }
     payAndTake() {
     }
-    display() {
-        // Displaying Dealer Hand Value
-        const element_dealerHand_value = document.getElementById("dealer-hand-value");
-        element_dealerHand_value.append(this.dealerHand.getHandValue());
-        // Displaying all the cards in the dealer's hand
-        const element_dealerHand = document.getElementById("dealer-hand");
-        this.dealerHand.cards.map(card => {
-            element_dealerHand.insertBefore(this.createCardImgElement(card), element_dealerHand.firstChild);
-        });
+    displayConsole() {
         // Displaying Dealer's hand in the console
         console.log("Dealer Hand: ");
         this.dealerHand.print();
-        // Displaying the Bet Boxes
-        const element_bet_boxes_area = document.getElementById("bet-boxes-area");
-        this.bet_boxes.map(betbox => {
-            const element_betbox = document.createElement("div");
-            element_betbox.className = "bet-box";
-            element_betbox.id = "bet-box-" + betbox.id;
-            element_bet_boxes_area.insertBefore(element_betbox, element_bet_boxes_area.firstChild);
-        });
         // Printing Players' Hands in the console
         for (let currentBetBox = 0; currentBetBox < this.bet_boxes.length; currentBetBox++) {
             let betbox = this.bet_boxes[currentBetBox];
@@ -99,35 +163,13 @@ class BlackjackGame {
                 hand.print(currentHand + 1);
             }
         }
-        // Displaying Bet Boxes
-        for (let currentBetBox = 0; currentBetBox < this.BET_BOXES_AMOUNT; currentBetBox++) {
-            const betbox = this.bet_boxes[currentBetBox];
-            if (betbox.player == null)
-                continue;
-            const hand = betbox.hands[0];
-            const element_bet_box = document.getElementById("bet-box-" + betbox.id);
-            // Displaying Hand Value of this Hand
-            const element_hand_value = document.createElement("div");
-            element_hand_value.className = "hand-value";
-            element_hand_value.append(hand.getHandValue());
-            element_bet_box.appendChild(element_hand_value);
-            // Displaying Cards of this Hand
-            for (let currentCard = 0; currentCard < hand.cards.length; currentCard++) {
-                const card = hand.cards[currentCard];
-                const element_card = this.createCardImgElement(card);
-                const top_offset = 90;
-                element_card.style.top = (-top_offset + (currentCard * -30)).toString() + "px";
-                element_card.style.left = (currentCard * 35).toString() + "px";
-                element_bet_box.appendChild(element_card);
-            }
-        }
     }
-    createCardImgElement(card) {
+    createCardImgElement(card, id) {
         // Card Images Origin h: 240 w: 160
         let cards_path = "./assets/cards/";
         let img_type_file = ".png";
         const cardImg = document.createElement("img");
-        cardImg.className = "card";
+        cardImg.className = "card card-" + id;
         cardImg.src = cards_path + card.toString(false) + img_type_file;
         return cardImg;
     }
