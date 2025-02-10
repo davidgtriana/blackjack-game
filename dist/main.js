@@ -6,11 +6,12 @@ import * as Game from "./blackjack/card-game.js";
 let DEBUG_MODE = true;
 let dealSound = document.getElementById("deal-sound");
 class BlackjackGame {
-    die = new DiceRoller(12345);
+    die = new DiceRoller();
     MAX_HANDS = 4;
     MAX_BET_BOXES = 9;
-    BET_BOXES_AMOUNT = 4;
-    DECKS_PER_SHOE = 1;
+    MAX_BET_BOXES_PER_PLAYER = 2;
+    BET_BOXES_AMOUNT = 7;
+    DECKS_PER_SHOE = 6;
     DECK_PENETRATION = 0.50;
     MAX_BET = 750;
     MIN_BET = 25;
@@ -57,7 +58,10 @@ class BlackjackGame {
         this.players.push(new Player("Juan"));
         this.players.push(new Player("David"));
         this.players.push(new Player("Godoy"));
-        //this.players.push(new Player("Triana"));
+        this.players.push(new Player("Triana"));
+        this.players.push(new Player("Daiki"));
+        this.players.push(new Player("Daniel"));
+        this.players.push(new Player("Camila"));
         // Assigning a player per Bet Box
         for (let i = 0; i < this.players.length; i++) {
             //if (i==2) continue;
@@ -95,6 +99,7 @@ class BlackjackGame {
         // -- Prepare the Shoe
         this.shoe = new Game.StackCard(this.DECKS_PER_SHOE);
         this.shoe.shuffle(this.die);
+        this.shoe.print();
         // -- Burning Card
         this.discard_pile.add(this.shoe.draw());
     }

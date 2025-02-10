@@ -31,6 +31,8 @@
         <script src="https://kit.fontawesome.com/082c565d5c.js" crossorigin="anonymous"></script>
 
         <!--TODO:
+                FIX: 
+                    -- Refactor HitHand Method for better readability
                 3. Game
                     -- Programming Course Of play
                     -- Erasing current display of item to update them properly
@@ -39,14 +41,18 @@
                     -- turns per player
                     -- dealer's actions
                     -- Pay and Take
-                4. Basic Strategy
-                5. Card Counting
-                6. Simulator
+                4. UI Element Settings to Config the Game
+                5. Basic Strategy
+                6. Card Counting
+                7. Simulator
+                8. Animated and Visual Apealing UI
         -------------------------- -->
         <title>Blackjack Game</title>
     </head>
     <body>
-        <audio id="deal-sound" src="./assets/sounds/dealing_card.ogg"></audio>
+        <audio id="deal-sound" preload="auto" type="audio/mpeg">
+            <source src="./assets/sounds/dealing_card.mp3" type="audio/mpeg">
+        </audio>
         <h1>BlackJack</h1>
     
     <!-- Dealer Section -->

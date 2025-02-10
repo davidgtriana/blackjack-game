@@ -10,12 +10,13 @@ let DEBUG_MODE: boolean = true;
 let dealSound = document.getElementById("deal-sound") as HTMLAudioElement;
 
 class BlackjackGame {
-    die: DiceRoller = new DiceRoller(12345);
+    die: DiceRoller = new DiceRoller();
 
     MAX_HANDS: number = 4;
     MAX_BET_BOXES: number = 9;
-    BET_BOXES_AMOUNT: number = 4;
-    DECKS_PER_SHOE: number = 1;
+    MAX_BET_BOXES_PER_PLAYER: number = 2;
+    BET_BOXES_AMOUNT: number = 7;
+    DECKS_PER_SHOE: number = 6;
     DECK_PENETRATION: number = 0.50;
     MAX_BET: number = 750;
     MIN_BET: number = 25;
@@ -77,7 +78,10 @@ class BlackjackGame {
         this.players.push(new Player("Juan"));
         this.players.push(new Player("David"));
         this.players.push(new Player("Godoy"));
-        //this.players.push(new Player("Triana"));
+        this.players.push(new Player("Triana"));
+        this.players.push(new Player("Daiki"));
+        this.players.push(new Player("Daniel"));
+        this.players.push(new Player("Camila"));
 
         // Assigning a player per Bet Box
         for (let i=0;i<this.players.length;i++){
@@ -124,6 +128,7 @@ class BlackjackGame {
         // -- Prepare the Shoe
         this.shoe = new Game.StackCard(this.DECKS_PER_SHOE);
         this.shoe.shuffle(this.die);
+        this.shoe.print();
 
         // -- Burning Card
         this.discard_pile.add(this.shoe.draw()!);
