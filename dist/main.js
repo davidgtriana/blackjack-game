@@ -2,30 +2,25 @@ import { DiceRoller } from "./blackjack/dice-roller.js";
 import { Hand } from "./blackjack/hand.js";
 import { Player } from "./blackjack/player.js";
 import { BetBox } from "./blackjack/bet-box.js";
+import { GameConfig } from "./config.js";
 import * as Game from "./blackjack/card-game.js";
 let DEBUG_MODE = true;
-let dealSound = document.getElementById("deal-sound");
 class BlackjackGame {
+    // 4 bet boxes, 4 players
+    // --- Seed: 12345
+    // --- --- Dealer Ace UP
+    // --- Seed: 44444
+    // --- --- Dealer Ace UP with Box1 10
+    // --- Seed: 1999472141
+    // --- --- Dealer 3 Box1&4 w Soft totals and Box3 10
     die = new DiceRoller(12345);
-    MAX_HANDS = 4;
-    MAX_BET_BOXES = 9;
-    MAX_BET_BOXES_PER_PLAYER = 2;
-    BET_BOXES_AMOUNT = 7;
-    DECKS_PER_SHOE = 6;
-    DECK_PENETRATION = 0.50;
-    MAX_BET = 750;
-    MIN_BET = 25;
-    IS_EUROPEAN_NO_HOLE_CARD = true;
-    IS_HIT_17 = true;
-    IS_ALLOWED_SURRENDER = true;
-    IS_ALLOWED_DOUBLE_AFTER_SPLIT = true;
-    IS_ORIGINAL_BET_ONLY = true;
     shoe;
     discard_pile;
     dealerHand;
     players = [];
     bet_boxes = [];
     active_hands = [];
+    current_hand_playing_index = 0;
     constructor() {
         // Start the table
         this.initializeTable();
@@ -41,11 +36,11 @@ class BlackjackGame {
         this.dealerHand = new Hand(0, 0, 0);
         this.discard_pile = new Game.StackCard(0);
         // -- Create the Bet Boxes
-        for (let i = 0; i < this.BET_BOXES_AMOUNT; i++)
+        for (let i = 0; i < GameConfig.BET_BOXES_AMOUNT; i++)
             this.bet_boxes.push(new BetBox(i + 1));
         // Instantiate Bet Boxes HTML Elements
         const element_bet_boxes_area = document.getElementById("bet-boxes-area");
-        for (let currentBetBox = 0; currentBetBox < this.BET_BOXES_AMOUNT; currentBetBox++) {
+        for (let currentBetBox = 0; currentBetBox < GameConfig.BET_BOXES_AMOUNT; currentBetBox++) {
             const betbox = this.bet_boxes[currentBetBox];
             const element_betbox = document.createElement("div");
             element_betbox.className = "bet-box";
@@ -59,9 +54,6 @@ class BlackjackGame {
         this.players.push(new Player("David"));
         this.players.push(new Player("Godoy"));
         this.players.push(new Player("Triana"));
-        this.players.push(new Player("Daiki"));
-        this.players.push(new Player("Daniel"));
-        this.players.push(new Player("Camila"));
         // Assigning a player per Bet Box
         for (let i = 0; i < this.players.length; i++) {
             //if (i==2) continue;
@@ -97,7 +89,7 @@ class BlackjackGame {
     }
     startNewShoe() {
         // -- Prepare the Shoe
-        this.shoe = new Game.StackCard(this.DECKS_PER_SHOE);
+        this.shoe = new Game.StackCard(GameConfig.DECKS_PER_SHOE);
         this.shoe.shuffle(this.die);
         this.shoe.print();
         // -- Burning Card
@@ -219,14 +211,35 @@ class BlackjackGame {
     }
 }
 let game = new BlackjackGame();
+// Setting up the hover sound for the buttons
+const buttons = document.querySelectorAll('.btn');
+buttons.forEach(button => {
+    button.addEventListener('mouseenter', function () {
+        playHoverButtonSound();
+    });
+});
+// Setting up the click event for the deal button
 document.getElementById("btn-deal")?.addEventListener("click", () => {
     game.initialDealOut();
 });
 document.getElementById("btn-create-table")?.addEventListener("click", () => {
+    console.log("Creating Table");
 });
 function playDealSound() {
     let audioCtx = new window.AudioContext();
     fetch("./assets/sounds/dealing_card.mp3")
+        .then(response => response.arrayBuffer())
+        .then(arrayBuffer => audioCtx.decodeAudioData(arrayBuffer))
+        .then(audioBuffer => {
+        let source = audioCtx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(audioCtx.destination);
+        source.start(0);
+    });
+}
+function playHoverButtonSound() {
+    let audioCtx = new window.AudioContext();
+    fetch("./assets/sounds/hover_button.wav")
         .then(response => response.arrayBuffer())
         .then(arrayBuffer => audioCtx.decodeAudioData(arrayBuffer))
         .then(audioBuffer => {

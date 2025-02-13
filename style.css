@@ -90,13 +90,38 @@ body {
     font-weight: bold;
 }
 
+#buttons-area {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    padding-top: 30px;
+    max-width: 800px;
+    margin: 0 auto;
+}
 
 .btn {
-    width: 150px;
-    padding: 10px;
-    font-size: 16px;
+    color:white;
+    font-size: 12px;
     font-weight: bold;
+    text-transform: uppercase;
+    text-align: center;
+    border: 4px rgb(211, 85, 53) solid;
+    box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.25);
+    background-color: black;
+    border-radius: 50%;
+    
+    width: 100px;
+    height: 100px;
+    padding: 10px;
+    
+    text-overflow: ellipsis;
+    
     cursor: pointer;
+}
+
+.btn:hover {
+    background-color: rgb(211, 85, 53);
 }
 
 .btn:disabled {
