@@ -31,7 +31,7 @@ export class Hand{
         }
 
         // Adjust for Aces if total exceeds 21
-        while (this.total > 21 && this.ace_count >0){
+        while (this.total > 21 && this.ace_count > 0){
             this.total -= 10;
             this.ace_count--;
         }

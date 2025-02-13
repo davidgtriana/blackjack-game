@@ -43,8 +43,12 @@ export class Hand {
             return "0";
         if (this.total > 21)
             return "💥";
-        if (this.total == 21 && this.cards.length == 2)
+        if (this.total == 21 && this.cards.length == 2) {
             return "BJ";
+        }
+        else if (this.id > 1) {
+            return this.total.toString();
+        }
         if (this.ace_count > 0 && this.total <= 21) {
             return this.total.toString() + "/" + (this.total - 10).toString();
         }

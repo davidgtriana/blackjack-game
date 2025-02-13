@@ -6,7 +6,7 @@ import * as Game from "./blackjack/card-game.js";
 let DEBUG_MODE = true;
 let dealSound = document.getElementById("deal-sound");
 class BlackjackGame {
-    die = new DiceRoller();
+    die = new DiceRoller(12345);
     MAX_HANDS = 4;
     MAX_BET_BOXES = 9;
     MAX_BET_BOXES_PER_PLAYER = 2;
@@ -129,10 +129,7 @@ class BlackjackGame {
     }
     async hitHand(hand, card, entity = "player") {
         await this.delay(200); // 🕒 Wait 1 second before dealing
-        if (!dealSound)
-            return;
-        dealSound.currentTime = 0;
-        dealSound.play();
+        playDealSound();
         hand.hit(card);
         const card_id = hand.cards.length - 1;
         const element_card = this.createCardImgElement(card, card_id + 1);
@@ -225,5 +222,17 @@ let game = new BlackjackGame();
 document.getElementById("btn-deal")?.addEventListener("click", () => {
     game.initialDealOut();
 });
-document.getElementById("btn-hit")?.addEventListener("click", () => {
+document.getElementById("btn-create-table")?.addEventListener("click", () => {
 });
+function playDealSound() {
+    let audioCtx = new window.AudioContext();
+    fetch("./assets/sounds/dealing_card.mp3")
+        .then(response => response.arrayBuffer())
+        .then(arrayBuffer => audioCtx.decodeAudioData(arrayBuffer))
+        .then(audioBuffer => {
+        let source = audioCtx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(audioCtx.destination);
+        source.start(0);
+    });
+}
