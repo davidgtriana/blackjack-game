@@ -5,6 +5,7 @@ import { BetBox } from "./blackjack/bet-box.js";
 import { GameConfig } from "./config.js";
 import * as Game from "./blackjack/card-game.js";
 let DEBUG_MODE = true;
+let audioCtx = new window.AudioContext();
 class BlackjackGame {
     // 3 Bet Boxes w/ 3 Players
     // Seed: 1287203866
@@ -19,7 +20,7 @@ class BlackjackGame {
     // --- Soft Total on Box 1 and BJ on Box 2
     // Seed: 1026684650
     // --- BJ on Box 3 an Dealer 6
-    die = new DiceRoller(116527752);
+    die = new DiceRoller();
     shoe;
     discard_pile;
     dealerHand;
@@ -43,6 +44,12 @@ class BlackjackGame {
         // Instantiate Table Game Objects
         this.dealerHand = new Hand(0, 0, 0);
         this.discard_pile = new Game.StackCard(0);
+        // Create the Shoe Preview Area
+        const element_shoe_preview_area = document.getElementById("shoe-preview-area");
+        element_shoe_preview_area.innerHTML = "";
+        const element_cards = document.createElement("div");
+        element_cards.className = "cards";
+        element_shoe_preview_area.append(element_cards);
         // Getting Dealer Area Element
         const element_dealer_area = document.getElementById("dealer-area");
         element_dealer_area.innerHTML = "";
@@ -134,8 +141,16 @@ class BlackjackGame {
         // -- Prepare the Shoe
         this.shoe = new Game.StackCard(GameConfig.DECKS_PER_SHOE);
         this.shoe.shuffle(this.die);
+        // Adds the Cards to the Shoe preview on top of the page
+        const element_cards = document.getElementById("shoe-preview-area").querySelector(".cards");
+        this.shoe.cards.forEach((card, currentCard) => {
+            const element_card = this.createCardImgElement(card, currentCard + 1);
+            element_cards.append(element_card);
+        });
         // -- Burning Card
         this.discard_pile.add(this.shoe.draw());
+        // Update the Show Preview
+        element_cards.firstChild.remove();
     }
     async initialDealOut() {
         this.current_hand_playing_index = 0;
@@ -150,22 +165,27 @@ class BlackjackGame {
         this.dealerHand.isActive = true;
         // Deal the Primary Card to Players
         for (let hand of this.active_hands)
-            await this.hitHand(hand, this.shoe.draw());
+            await this.hitHand(hand);
         // Deal the Primary Card to Dealer
-        await this.hitHand(this.dealerHand, this.shoe.draw(), "dealer");
+        await this.hitHand(this.dealerHand, "dealer");
         // Deal the Secondary Card to Players
         for (let hand of this.active_hands)
-            await this.hitHand(hand, this.shoe.draw());
+            await this.hitHand(hand);
         // Deal the Secondary Card to Dealer
         //if (!this.IS_EUROPEAN_NO_HOLE_CARD) this.dealerHand.hit(this.shoe.draw()!);
         if (DEBUG_MODE)
             this.displayConsole();
         this.courseOfPlay();
     }
-    async hitHand(hand, card, entity = "player") {
+    async hitHand(hand, entity = "player") {
         await delay(GameConfig.DEAL_CARD_DELAY);
         // Play Deal Sound
         playDealSound();
+        // Get the Card out of the Shoe
+        const card = this.shoe.draw();
+        // Update the Show Preview
+        let element_cards = document.getElementById("shoe-preview-area").querySelector(".cards");
+        element_cards.firstChild.remove();
         // Add the Object card to the list of cards of the hand 
         hand.hit(card);
         // Select the Parent Element of the Hand Element
@@ -176,7 +196,7 @@ class BlackjackGame {
         const element_value = element_hand.querySelector(".value");
         element_value.textContent = hand.getHandValue();
         // Selects the Cards Container of that Hand
-        const element_cards = element_area.querySelector(".cards");
+        element_cards = element_area.querySelector(".cards");
         // Creates the HTML Card Element
         const card_id = hand.cards.length - 1;
         const element_card = this.createCardImgElement(card, card_id + 1);
@@ -227,7 +247,6 @@ class BlackjackGame {
     }
     playNextHand() {
         // Check if all hands have been played
-        console.log(this.current_hand_playing_index.toString() + "" + this.active_hands.length.toString());
         if (this.current_hand_playing_index >= this.active_hands.length) {
             if (DEBUG_MODE)
                 console.log("All hands have been played. Dealer's turn...");
@@ -295,7 +314,7 @@ class BlackjackGame {
                 if (GameConfig.IS_DEALER_HIT_ON_17) {
                     if (DEBUG_MODE)
                         console.log("Dealer hits on soft 17...");
-                    await this.hitHand(this.dealerHand, this.shoe.draw(), "dealer");
+                    await this.hitHand(this.dealerHand, "dealer");
                     this.playDealerHand(); // Recursive call to check if another hit is needed.
                     return;
                 }
@@ -315,7 +334,7 @@ class BlackjackGame {
         if (this.dealerHand.total < 17) {
             if (DEBUG_MODE)
                 console.log(`Dealer hits on ${this.dealerHand.total}...`);
-            await this.hitHand(this.dealerHand, this.shoe.draw(), "dealer");
+            await this.hitHand(this.dealerHand, "dealer");
             this.playDealerHand(); // Recursive call to continue hitting until they stand or bust.
             return;
         }
@@ -387,7 +406,7 @@ document.getElementById("btn-hit")?.addEventListener("click", async () => {
     // Get the current hand
     const hand = game.active_hands[game.current_hand_playing_index];
     // Hit the hand
-    await game.hitHand(hand, game.shoe.draw());
+    await game.hitHand(hand);
     if (DEBUG_MODE)
         console.log("Hit button clicked for the hand No: " + hand.id + " of Bet Box: " + hand.betbox_id);
     if (DEBUG_MODE)
@@ -451,6 +470,8 @@ document.getElementById("btn-next-hand")?.addEventListener("click", async () => 
     // Do nothing if there are no active hands
     if (game.active_hands.length == 0)
         return;
+    if (game.current_hand_playing_index != game.active_hands.length)
+        return;
     // Resets the Dealer hand
     game.dealerHand.reset();
     // Update Dealer Value
@@ -461,7 +482,11 @@ document.getElementById("btn-next-hand")?.addEventListener("click", async () => 
     game.bet_boxes.forEach(betbox => { betbox.hands[0].reset(); });
     // Clean the Active Hands Tracker
     game.active_hands = [];
-    const element_cards_list = document.querySelectorAll(".cards");
+    let element_cards_list = document.getElementById("dealer-area").querySelectorAll(".cards");
+    element_cards_list.forEach(element_cards => {
+        element_cards.innerHTML = "";
+    });
+    element_cards_list = document.getElementById("bet-boxes-area").querySelectorAll(".cards");
     element_cards_list.forEach(element_cards => {
         element_cards.innerHTML = "";
     });
@@ -469,7 +494,6 @@ document.getElementById("btn-next-hand")?.addEventListener("click", async () => 
     game.placeBets();
 });
 function playDealSound() {
-    let audioCtx = new window.AudioContext();
     fetch("./assets/sounds/dealing_card.mp3")
         .then(response => response.arrayBuffer())
         .then(arrayBuffer => audioCtx.decodeAudioData(arrayBuffer))
@@ -478,10 +502,10 @@ function playDealSound() {
         source.buffer = audioBuffer;
         source.connect(audioCtx.destination);
         source.start(0);
-    });
+    })
+        .catch(error => console.error("Error playing sound:", error));
 }
 function playHoverButtonSound() {
-    let audioCtx = new window.AudioContext();
     fetch("./assets/sounds/hover_button.wav")
         .then(response => response.arrayBuffer())
         .then(arrayBuffer => audioCtx.decodeAudioData(arrayBuffer))
@@ -490,7 +514,8 @@ function playHoverButtonSound() {
         source.buffer = audioBuffer;
         source.connect(audioCtx.destination);
         source.start(0);
-    });
+    })
+        .catch(error => console.error("Error playing sound:", error));
 }
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
