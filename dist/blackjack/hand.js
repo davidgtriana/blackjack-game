@@ -40,8 +40,8 @@ export class Hand {
     split() { }
     surrender() { }
     insurance() { }
-    print(id) {
-        console.log("Hand No. " + (id ? id : 0) + ": Points: " + this.getHandValue() + " Wager: $" + this.bet + " Cards: " + this.cards.map(card => card.toString(true)).join(" | "));
+    print() {
+        console.log("Hand No. " + (this.id ? this.id : 0) + ": Active: " + this.isActive + " Total: " + this.getHandValue() + " Bet: $" + this.bet + " Cards: " + this.cards.map(card => card.toString(true)).join(" | "));
     }
     placeBet(bet) {
         this.bet = bet;
@@ -67,5 +67,12 @@ export class Hand {
     }
     isSoft() {
         return this.total <= 21 && this.ace_count > 0;
+    }
+    reset() {
+        this.cards = [];
+        this.total = 0;
+        this.ace_count = 0;
+        this.bet = 0;
+        this.isActive = false;
     }
 }

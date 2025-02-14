@@ -23,7 +23,7 @@ class BlackjackGame {
     // --- Soft Total on Box 1 and BJ on Box 2
     // Seed: 1026684650
     // --- BJ on Box 3 an Dealer 6
-    die: DiceRoller = new DiceRoller();
+    die: DiceRoller = new DiceRoller(116527752);
 
     shoe!: Game.StackCard;
     discard_pile!: Game.StackCard;
@@ -37,6 +37,7 @@ class BlackjackGame {
     
 
     constructor(){
+        if (DEBUG_MODE) console.log("Seed: "+ this.die.getSeed());
         
         // Start the table
         this.instantiateTableGame();
@@ -155,6 +156,7 @@ class BlackjackGame {
             const element_hand = element_betbox.querySelector(".hand-1")!;
             const element_hand_value = element_hand.querySelector(".value")! as HTMLElement;
             element_hand_value.style.visibility = "visible";
+            element_hand_value.innerHTML="0";
             const element_hand_bet = element_hand.querySelector(".bet")! as HTMLElement;
             element_hand_bet.innerHTML = betbox.hands[0].bet.toString();
             element_hand_bet.style.visibility = "visible";
@@ -172,6 +174,7 @@ class BlackjackGame {
     }
 
     public async initialDealOut(){
+        this.current_hand_playing_index = 0;
 
         // Track Active Hands
         for (let betbox of this.bet_boxes){
@@ -279,6 +282,8 @@ class BlackjackGame {
 
     public playNextHand(){
         // Check if all hands have been played
+        console.log(this.current_hand_playing_index.toString() + "" + this.active_hands.length.toString());
+
         if(this.current_hand_playing_index >= this.active_hands.length){
             if(DEBUG_MODE) console.log("All hands have been played. Dealer's turn...");
 
@@ -287,8 +292,9 @@ class BlackjackGame {
             this.dealerHand.isActive = false;
             
             if (this.dealerHand.isSoft()){
-                const dealer_hand_value = document.querySelector(".dealer-area .value")!;
-                dealer_hand_value.textContent = this.dealerHand.getHandValue();
+                const element_dealer_area = document.getElementById("dealer-area")!;
+                const element_hand_value = element_dealer_area.querySelector(".hand .value")!;
+                element_hand_value.textContent = this.dealerHand.getHandValue();
             }
             return;
         }
@@ -321,58 +327,50 @@ class BlackjackGame {
      * 
      * This function is recursive, meaning it calls itself until the dealer's turn is complete.
      */
-public async playDealerHand() {
-    
-    // If the dealer's total exceeds 21, they bust and stop playing.
-    if (this.dealerHand.total > 21) {
-        if (DEBUG_MODE) console.log("Dealer has Too Many...");
-        return;
-    }
-
-    // If the dealer has a natural blackjack (21 with exactly 2 cards), they stop.
-    if (this.dealerHand.total == 21 && this.dealerHand.cards.length == 2) {
-        if (DEBUG_MODE) console.log("Dealer has a Blackjack...");
-        return;
-    }
-
-    // If the dealer's total is greater than 17, they must stand.
-    if (this.dealerHand.total > 17) {
-        if (DEBUG_MODE) console.log("Dealer stands on "+ this.dealerHand.total.toString() + "...");
-        return;
-    }
-
-    // Special case: If the dealer has exactly 17
-    if (this.dealerHand.total == 17) {
-        
-        // Check if the dealer has a soft 17 (contains an Ace counted as 11)
-        if (this.dealerHand.isSoft()) {
-
-            // If the game rules allow hitting on soft 17, the dealer hits.
-            if (GameConfig.IS_DEALER_HIT_ON_17) {
-                if (DEBUG_MODE) console.log("Dealer hits on soft 17...");
-                await this.hitHand(this.dealerHand, this.shoe.draw()!, "dealer");
-                this.playDealerHand(); // Recursive call to check if another hit is needed.
-                return;
-            } else {
-                // Otherwise, the dealer stands on soft 17.
-                if (DEBUG_MODE) console.log("Dealer stands on soft 17...");
-                return;
-            }
+    public async playDealerHand() {
+        // If the dealer's total exceeds 21, they bust and stop playing.
+        if (this.dealerHand.total > 21) {
+            if (DEBUG_MODE) console.log("Dealer has Too Many...");
+            return;
         }
-
-        // If it's a hard 17 (no Ace counted as 11), the dealer must stand.
-        if (DEBUG_MODE) console.log("Dealer stands on hard 17...");
-        return;
+        // If the dealer has a natural blackjack (21 with exactly 2 cards), they stop.
+        if (this.dealerHand.total == 21 && this.dealerHand.cards.length == 2) {
+            if (DEBUG_MODE) console.log("Dealer has a Blackjack...");
+            return;
+        }
+        // If the dealer's total is greater than 17, they must stand.
+        if (this.dealerHand.total > 17) {
+            if (DEBUG_MODE) console.log("Dealer stands on "+ this.dealerHand.total.toString() + "...");
+            return;
+        }
+        // Special case: If the dealer has exactly 17
+        if (this.dealerHand.total == 17) {
+            // Check if the dealer has a soft 17 (contains an Ace counted as 11)
+            if (this.dealerHand.isSoft()) {
+                // If the game rules allow hitting on soft 17, the dealer hits.
+                if (GameConfig.IS_DEALER_HIT_ON_17) {
+                    if (DEBUG_MODE) console.log("Dealer hits on soft 17...");
+                    await this.hitHand(this.dealerHand, this.shoe.draw()!, "dealer");
+                    this.playDealerHand(); // Recursive call to check if another hit is needed.
+                    return;
+                } else {
+                    // Otherwise, the dealer stands on soft 17.
+                    if (DEBUG_MODE) console.log("Dealer stands on soft 17...");
+                    return;
+                }
+            }
+            // If it's a hard 17 (no Ace counted as 11), the dealer must stand.
+            if (DEBUG_MODE) console.log("Dealer stands on hard 17...");
+            return;
+        }
+        // If the dealer's total is below 17, they must hit.
+        if (this.dealerHand.total < 17) {
+            if (DEBUG_MODE) console.log(`Dealer hits on ${this.dealerHand.total}...`);
+            await this.hitHand(this.dealerHand, this.shoe.draw()!, "dealer");
+            this.playDealerHand(); // Recursive call to continue hitting until they stand or bust.
+            return;
+        }
     }
-
-    // If the dealer's total is below 17, they must hit.
-    if (this.dealerHand.total < 17) {
-        if (DEBUG_MODE) console.log(`Dealer hits on ${this.dealerHand.total}...`);
-        await this.hitHand(this.dealerHand, this.shoe.draw()!, "dealer");
-        this.playDealerHand(); // Recursive call to continue hitting until they stand or bust.
-        return;
-    }
-}
     
     public finishHand(){
         // Select the current hand to play
@@ -405,7 +403,6 @@ public async playDealerHand() {
     }
 
     public displayConsole(){
-        console.log("Seed: "+ this.die.getSeed());
 
         // Displaying Dealer's hand in the console
         console.log("Dealer Hand: ");
@@ -413,12 +410,12 @@ public async playDealerHand() {
 
         // Printing Players' Hands in the console
         for (let currentBetBox=0; currentBetBox<this.bet_boxes.length; currentBetBox++){
-            let betbox:BetBox = this.bet_boxes[currentBetBox];
+            const betbox = this.bet_boxes[currentBetBox];
             if (betbox.player == null) continue;
             console.log("Box No. "+(currentBetBox+1)+": Player: " + betbox.player.name);
             for (let currentHand=0; currentHand<betbox.hands.length; currentHand++){
-                let hand:Hand = betbox.hands[currentHand];
-                hand.print(currentHand+1);
+                const hand = betbox.hands[currentHand];
+                hand.print();
             }  
         }
         
@@ -529,65 +526,30 @@ document.getElementById("btn-create-table")?.addEventListener("click", async () 
 });
 
 document.getElementById("btn-next-hand")?.addEventListener("click", async () => {
-
     // Do nothing if there are no active hands
     if(game.active_hands.length == 0) return; 
 
-    if (DEBUG_MODE) console.log("Next Hand button clicked...");
+    // Resets the Dealer hand
+    game.dealerHand.reset();
 
-    //game.active_hands = [];
-    //console.log(game.active_hands);
+    // Update Dealer Value
+    const element_dealer_area = document.getElementById("dealer-area")!;
+    const element_dealer_value = element_dealer_area.querySelector(".hand .value") as HTMLElement;
+    element_dealer_value.innerHTML = "0";
 
+    // Resets the first hand objects of each betbox
+    game.bet_boxes.forEach(betbox =>{ betbox.hands[0].reset(); });
+
+    // Clean the Active Hands Tracker
+    game.active_hands = [];
     
+    const element_cards_list = document.querySelectorAll(".cards")!;
+    element_cards_list.forEach(element_cards =>{
+        element_cards.innerHTML = "";
+    });
 
-    // Erase the cards from the game
-
-
-    // Take all the cards elements from the table
-    /*
-    // Taking cards from the dealer
-    const element_dealer_area = document.getElementById("dealer-area");
-    const element_dealer_value = element_dealer_area?.querySelector(".value");
-    if(element_dealer_value) element_dealer_value.innerHTML = "";
-    const element_dealer_hand = element_dealer_area?.querySelector(".hand");
-    if(element_dealer_hand) element_dealer_hand.innerHTML = "";
-
-    // Taking cards from the players
-    // Iterate through each Bet Box with a hand to create its Hand Elements
-    for (let betbox of game.bet_boxes){
-        if (betbox.player == null) continue;
-        const element_betbox = document.getElementById("bet-box-"+betbox.id)!;
-        
-        // Displaying Hand Element Per Bet Box
-        for(let currentHand = 0; currentHand < betbox.hands.length ; currentHand++){
-            const hand = betbox.hands[currentHand];
-            const element_hand = document.querySelector(".hand-"+(currentHand+1));
-            if(element_hand) element_hand.innerHTML = "";
-
-            // Initialize Element of the Hand
-            const element_hand_value = document.createElement("div");
-            element_hand_value.className = "value";
-            element_hand_value.append(hand.getHandValue());
-            if(element_hand) element_hand.appendChild(element_hand_value);
-
-            const element_hand_bet = document.createElement("div");
-            element_hand_bet.className = "bet";
-            element_hand_bet.append(hand.bet.toString());
-            if(element_hand) element_hand.appendChild(element_hand_bet);
-        }
-    }
-    
-
-    
-    // Erase all the active hands
-
-    // Erase dealer's hand
-
-*/
-
-
-
-
+    // Place new Bets
+    game.placeBets();
 });
 
 
