@@ -43,6 +43,10 @@ export class Hand {
     print(id) {
         console.log("Hand No. " + (id ? id : 0) + ": Points: " + this.getHandValue() + " Wager: $" + this.bet + " Cards: " + this.cards.map(card => card.toString(true)).join(" | "));
     }
+    placeBet(bet) {
+        this.bet = bet;
+        this.isActive = true;
+    }
     getHandValue() {
         if (this.cards.length == 0)
             return "0";

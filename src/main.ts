@@ -19,6 +19,8 @@ class BlackjackGame {
     // --- All boxes can be doubled if played perfectly
     // Seed: 4226777415
     // --- Blazing 9's on Box 1 and Pocket 6's on Box 3
+    // Seed: 2910211537
+    // --- Soft Total on Box 1 and BJ on Box 2
     die: DiceRoller = new DiceRoller();
 
     shoe!: Game.StackCard;
@@ -35,35 +37,79 @@ class BlackjackGame {
     constructor(){
         
         // Start the table
-        this.initializeTable();
+        this.instantiateTableGame();
+
+        // Start New Shoe
+        this.startNewShoe();
 
         // Sit the players
         this.seatPlayers();
 
-        // Start New Shoe
-        this.startNewShoe();
-        
-        //this.courseOfPlay();
-        //this.payAndTake();
+        // Place the initial bets
+        this.placeBets();        
     }
-    
-    public initializeTable(){
-        // Creates Objects
+
+    public instantiateTableGame(){
+        // Instantiate Table Game Objects
         this.dealerHand = new Hand(0,0,0);
         this.discard_pile = new Game.StackCard(0);
 
-        // -- Create the Bet Boxes
-        for(let i=0; i < GameConfig.BET_BOXES_AMOUNT;i++)
-            this.bet_boxes.push(new BetBox(i+1));
+        // Dealer Area
+        const element_dealer_area = document.getElementById("dealer-area")!;
+        element_dealer_area.innerHTML = "";
 
-        // Instantiate Bet Boxes HTML Elements
+        // Create Value and Hand Elements of the Dealer
+        const element_dealer_value = document.createElement("div");
+        element_dealer_value.className = "value";
+        element_dealer_value.append(this.dealerHand.getHandValue());
+        element_dealer_area.appendChild(element_dealer_value);
+
+        const element_dealer_hand = document.createElement("div");
+        element_dealer_hand.className = "hand";
+        element_dealer_area.appendChild(element_dealer_hand);
+        
+
+        // Bet Boxes Area
         const element_bet_boxes_area = document.getElementById("bet-boxes-area")!;
-        for(let currentBetBox=0; currentBetBox < GameConfig.BET_BOXES_AMOUNT; currentBetBox++){
-            const betbox = this.bet_boxes[currentBetBox];
+        element_bet_boxes_area.innerHTML = "";
+        
+        // -- Create the Bet Boxes
+        for(let currentBetBox = 0; currentBetBox < GameConfig.BET_BOXES_AMOUNT; currentBetBox++){
+            // Instantiate Bet Box Object
+            const betbox = new BetBox( currentBetBox + 1 );
+
+            // Create Bet Box HTML Element
             const element_betbox = document.createElement("div");
             element_betbox.className = "bet-box";
-            element_betbox.id = "bet-box-"+betbox.id;
+            element_betbox.id = "bet-box-"+betbox.id; // I may change this to a class later
             element_bet_boxes_area.append(element_betbox);
+
+            // Add Bet Box Object to the List of Bet Boxes
+            this.bet_boxes.push(betbox);
+            
+            // Instantiate Hand Object
+            const hand = new Hand(0,1,currentBetBox+1);
+
+            // Create Hand HTML Element
+            const element_hand = document.createElement("div");
+            element_hand.className = "hand"+" hand-1";
+            element_betbox.appendChild(element_hand);
+
+            // Add Hand Object to the List of hands of this Bet Box
+            betbox.hands.push(hand);
+
+            // Create Value and Bet Elements of the Hand
+            const element_hand_value = document.createElement("div");
+            element_hand_value.className = "value";
+            element_hand_value.style.visibility = "hidden";
+            element_hand_value.append(hand.getHandValue());
+            element_hand.appendChild(element_hand_value);
+
+            const element_hand_bet = document.createElement("div");
+            element_hand_bet.className = "bet";
+            element_hand_bet.style.visibility = "hidden";
+            element_hand_bet.append(hand.bet.toString());
+            element_hand.appendChild(element_hand_bet);
         }
     }
 
@@ -81,42 +127,29 @@ class BlackjackGame {
         this.players.push(new Player("Yamada"));
 
         // Assigning a player per Bet Box
-        for (let i=0;i<this.bet_boxes.length;i++){
-            //if (i==2) continue;
-            this.bet_boxes[i].player = this.players[i];
-        }
+        this.bet_boxes.forEach((betbox,index) => {
+            if (index >= this.players.length) return;
+            betbox.player = this.players[index];
+        });
 
-        // Place Player Bets
-        for (let i=0;i<this.bet_boxes.length;i++){
-            //if (i==2) continue;
-            this.bet_boxes[i].placeBet(25);// Creates the first Hand of this bet box
-        }
+    }
 
-        // Iterate through each Bet Box with a hand to create its Hand Elements
-        for (let betbox of this.bet_boxes){
+    public placeBets() {
+        for(let betbox of this.bet_boxes){
             if (betbox.player == null) continue;
+            betbox.placeBet(25);
+
+            // Showing HTML Elements of the Hand
             const element_betbox = document.getElementById("bet-box-"+betbox.id)!;
+            const element_hand = element_betbox.querySelector(".hand-1")!;
+            const element_hand_value = element_hand.querySelector(".value")! as HTMLElement;
+            element_hand_value.style.visibility = "visible";
+            const element_hand_bet = element_hand.querySelector(".bet")! as HTMLElement;
+            element_hand_bet.style.visibility = "visible";
             
-            // Displaying Hand Element Per Bet Box
-            for(let currentHand = 0; currentHand < betbox.hands.length ; currentHand++){
-                const hand = betbox.hands[currentHand];
-                const element_hand = document.createElement("div");
-                element_hand.className = "hand"+" hand-"+(currentHand+1);
-                element_betbox.appendChild(element_hand);
-
-                // Initialize Element of the Hand
-                const element_hand_value = document.createElement("div");
-                element_hand_value.className = "value";
-                element_hand_value.append(hand.getHandValue());
-                element_hand.appendChild(element_hand_value);
-
-                const element_hand_bet = document.createElement("div");
-                element_hand_bet.className = "bet";
-                element_hand_bet.append(hand.bet.toString());
-                element_hand.appendChild(element_hand_bet);
-            }
         }
     }
+
 
     public startNewShoe() {
         
@@ -133,10 +166,13 @@ class BlackjackGame {
 
         // Track Active Hands
         for (let betbox of this.bet_boxes){
-            if (betbox.player == null) continue;
-            for (let hand of betbox.hands)
-                this.active_hands.push(hand);
+            const hand = betbox.hands[0];
+            if (!hand.isActive) continue;
+            this.active_hands.push(hand);
         }
+
+        // Activate Dealer Hand
+        this.dealerHand.isActive = true;
 
         // Deal the Primary Card to Players
         for (let hand of this.active_hands)
@@ -157,85 +193,89 @@ class BlackjackGame {
         this.courseOfPlay();
     }
 
-    delay(ms: number): Promise<void> {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-    
     public async hitHand(hand: Hand, card: Game.Card, entity: string = "player") {
-        await this.delay(200); // 🕒 Wait 1 second before dealing
-        playDealSound();   
+        await delay(GameConfig.DEAL_CARD_DELAY);
+
+        // Play Deal Sound
+        playDealSound();  
+        
+        // Add the Object card to the list of cards of the hand 
         hand.hit(card);
+
+        // Select the Parent Element of the Hand Element
+        const element_area = entity === "dealer" ? document.getElementById("dealer-area")! : document.getElementById(`bet-box-${hand.betbox_id}`)!;
+
+        // Update Hand Value
+        const element_value = element_area.querySelector(".value")!;
+        element_value.textContent = hand.getHandValue();
+
+        // Creates the HTML Card Element
         const card_id = hand.cards.length - 1;
         const element_card = this.createCardImgElement(card, card_id + 1);
-        
-        let element_area = entity === "dealer" 
-            ? document.getElementById("dealer-area") : document.getElementById(`bet-box-${hand.betbox_id}`);
-        if (!element_area) return;
-        
-        // Update Hand Value
-        const element_value = element_area.querySelector(".value");
-        if (element_value) element_value.textContent = hand.getHandValue();
-        
-        // Add Card Element
-        //const element_hand = element_area.querySelector(`.hand${entity === "player" ? `-` + hand.id : ``}`);
-        const element_hand = element_area.querySelector(".hand" + (entity=="player"?"-"+hand.id.toString():""));
-        if (element_hand) {
-            const top_offset = 90;
-            element_hand.appendChild(element_card);
-            
 
-            if(entity=="player"){
-                gsap.set(element_card,{
-                    position: "absolute",
-                    top: "-400px",
-                    left: "0px",
-                    opacity: 0,
-                    rotation: gsap.utils.random(-100, 100),
-                });
-                gsap.to(element_card, {
-                    position: "absolute",
-                    duration: 0.7,
-                    opacity: 1,
-                    top: `${-top_offset + card_id * -30}px`,
-                    left: `${card_id * 35}px`,
-                    rotation: 0,
-                    ease: "power2.out"
-                });
-            }
-            if(entity=="dealer"){
-                gsap.set(element_card,{
-                    position: "absolute",
-                    top: "-100px",
-                    left: "200px",
-                    opacity: 0,
-                    scale: 1,
-                    rotation: gsap.utils.random(-100, 100),
-                });
-                gsap.to(element_card, {
-                    position: "relative",
-                    duration: 0.7,
-                    opacity: 1,
-                    top: 0,
-                    left: 0,
-                    rotation: 0,
-                    ease: "power2.out"
-                });
-            }
+        // Add the Card Element to the Hand Element
+        const element_hand = element_area.querySelector(".hand" + (entity=="player"?"-"+hand.id.toString():""))!;
+        element_hand.appendChild(element_card);
+
+        // Animate the Card Element
+        const top_offset = 90;
+        if(entity=="player"){
+            gsap.set(element_card,{
+                position: "absolute",
+                top: "-400px",
+                left: "0px",
+                opacity: 0,
+                rotation: gsap.utils.random(-100, 100),
+            });
+            gsap.to(element_card, {
+                position: "absolute",
+                duration: 0.7,
+                opacity: 1,
+                top: `${-top_offset + card_id * -30}px`,
+                left: `${card_id * 35}px`,
+                rotation: 0,
+                ease: "power2.out"
+            });
+        }
+
+        if(entity=="dealer"){
+            gsap.set(element_card,{
+                position: "absolute",
+                top: "-100px",
+                left: "200px",
+                opacity: 0,
+                scale: 1,
+                rotation: gsap.utils.random(-100, 100),
+            });
+            gsap.to(element_card, {
+                position: "relative",
+                duration: 0.7,
+                opacity: 1,
+                top: 0,
+                left: 0,
+                rotation: 0,
+                ease: "power2.out"
+            });
         }
     }    
     
-    
     public courseOfPlay() {
-
         this.playNextHand();
-        
     }
 
     public playNextHand(){
         // Check if all hands have been played
         if(this.current_hand_playing_index >= this.active_hands.length){
             if(DEBUG_MODE) console.log("All hands have been played. Dealer's turn...");
+
+            // Play the Dealer's Hand Recursively
             this.playDealerHand();
+            this.dealerHand.isActive = false;
+            
+            if (this.dealerHand.isSoft()){
+                const dealer_hand_value = document.querySelector(".dealer-area .value")!;
+                dealer_hand_value.textContent = this.dealerHand.getHandValue();
+            }
             return;
         }
 
@@ -244,9 +284,9 @@ class BlackjackGame {
         if(DEBUG_MODE) console.log("Current Hand Playing: " + (this.current_hand_playing_index+1));
 
         // Highlight the current hand in the UI
-        const element_betbox = document.getElementById("bet-box-"+hand.betbox_id);
-        const element_hand = element_betbox?.querySelector(".hand-"+hand.id);
-        element_hand?.classList.add("current_turn");
+        const element_betbox = document.getElementById("bet-box-"+hand.betbox_id)!;
+        const element_hand = element_betbox?.querySelector(".hand-"+hand.id)!;
+        element_hand.classList.add("current_turn");
 
         if(hand.total == 21 && hand.cards.length == 2){
             if(DEBUG_MODE) console.log("Blackjack!");
@@ -300,12 +340,23 @@ class BlackjackGame {
     }
     
     public finishHand(){
-        // Remove the highlight from the current hand
-        const element_current_turn = document.querySelector(".current_turn");
-        element_current_turn?.classList.remove("current_turn"); 
+        // Select the current hand to play
+        const hand = this.active_hands[this.current_hand_playing_index];
 
         // Make this hand inactive
-        this.active_hands[this.current_hand_playing_index].isActive = false;
+        hand.isActive = false;
+
+        // Select the current Hand Element
+        const element_current_turn = document.querySelector(".current_turn")!;
+
+        // Update Hand Value
+        if (this.active_hands[this.current_hand_playing_index].isSoft()){
+            const element_value = element_current_turn.querySelector(".value")!;
+            element_value.textContent = hand.getHandValue();
+        }
+
+        // Remove the current_turn class
+        element_current_turn.classList.remove("current_turn"); 
 
         // Continue playing the next hand
         this.current_hand_playing_index++;
@@ -395,7 +446,7 @@ document.getElementById("btn-hit")?.addEventListener("click", async () => {
 
 document.getElementById("btn-stand")?.addEventListener("click", async () => {
     // Do nothing if there are no active hands
-    if(game.active_hands.length ==0) return; 
+    if(game.active_hands.length == 0) return; 
 
     // Get the current hand
     const hand = game.active_hands[game.current_hand_playing_index];
@@ -404,6 +455,104 @@ document.getElementById("btn-stand")?.addEventListener("click", async () => {
 
     // Stand the hand by finishing it
     game.finishHand();
+
+});
+
+document.getElementById("btn-double")?.addEventListener("click", async () => {
+    if (DEBUG_MODE) console.log("Double Down button clicked...");
+});
+
+
+document.getElementById("btn-split")?.addEventListener("click", async () => {
+    if (DEBUG_MODE) console.log("Split button clicked...");
+});
+
+document.getElementById("btn-surrender")?.addEventListener("click", async () => {
+    if (DEBUG_MODE) console.log("Surrender button clicked...");
+});
+
+document.getElementById("btn-insurance")?.addEventListener("click", async () => {
+    if (DEBUG_MODE) console.log("Insurance button clicked...");
+});
+
+document.getElementById("btn-undo")?.addEventListener("click", async () => {
+    if (DEBUG_MODE) console.log("Undo button clicked...");
+});
+
+document.getElementById("btn-clear-bets")?.addEventListener("click", async () => {
+    if (DEBUG_MODE) console.log("Clear Bets button clicked...");
+});
+
+
+document.getElementById("btn-reset-table")?.addEventListener("click", async () => {
+    if (DEBUG_MODE) console.log("Create reset button clicked...");
+});
+
+
+document.getElementById("btn-create-table")?.addEventListener("click", async () => {
+    if (DEBUG_MODE) console.log("Create table button clicked...");
+});
+
+document.getElementById("btn-next-hand")?.addEventListener("click", async () => {
+
+    // Do nothing if there are no active hands
+    if(game.active_hands.length == 0) return; 
+
+    if (DEBUG_MODE) console.log("Next Hand button clicked...");
+
+    console.log(game.active_hands);
+    game.active_hands = [];
+    console.log(game.active_hands);
+
+    
+
+    // Erase the cards from the game
+
+
+    // Take all the cards elements from the table
+    /*
+    // Taking cards from the dealer
+    const element_dealer_area = document.getElementById("dealer-area");
+    const element_dealer_value = element_dealer_area?.querySelector(".value");
+    if(element_dealer_value) element_dealer_value.innerHTML = "";
+    const element_dealer_hand = element_dealer_area?.querySelector(".hand");
+    if(element_dealer_hand) element_dealer_hand.innerHTML = "";
+
+    // Taking cards from the players
+    // Iterate through each Bet Box with a hand to create its Hand Elements
+    for (let betbox of game.bet_boxes){
+        if (betbox.player == null) continue;
+        const element_betbox = document.getElementById("bet-box-"+betbox.id)!;
+        
+        // Displaying Hand Element Per Bet Box
+        for(let currentHand = 0; currentHand < betbox.hands.length ; currentHand++){
+            const hand = betbox.hands[currentHand];
+            const element_hand = document.querySelector(".hand-"+(currentHand+1));
+            if(element_hand) element_hand.innerHTML = "";
+
+            // Initialize Element of the Hand
+            const element_hand_value = document.createElement("div");
+            element_hand_value.className = "value";
+            element_hand_value.append(hand.getHandValue());
+            if(element_hand) element_hand.appendChild(element_hand_value);
+
+            const element_hand_bet = document.createElement("div");
+            element_hand_bet.className = "bet";
+            element_hand_bet.append(hand.bet.toString());
+            if(element_hand) element_hand.appendChild(element_hand_bet);
+        }
+    }
+    
+
+    
+    // Erase all the active hands
+
+    // Erase dealer's hand
+
+*/
+
+
+
 
 });
 
@@ -433,4 +582,8 @@ function playHoverButtonSound() {
             source.connect(audioCtx.destination);
             source.start(0);
         });
+}
+
+function delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }

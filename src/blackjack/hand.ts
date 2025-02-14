@@ -1,12 +1,11 @@
 import * as Game from "./card-game.js";
 
 export class Hand{
+    
     id: number = 0;
     betbox_id: number = 0;
     cards: Game.Card[] = [];
     bet: number = 0;
-
-    
 
     // Are buttons enabled for this hand?
     isActive: boolean = false;
@@ -53,6 +52,11 @@ export class Hand{
 
     public print(id?:number){
         console.log("Hand No. "+(id?id:0)+ ": Points: " + this.getHandValue() + " Wager: $" + this.bet + " Cards: " + this.cards.map(card => card.toString(true)).join(" | "));
+    }
+
+    public placeBet(bet: number) {
+        this.bet = bet;
+        this.isActive = true;
     }
     
     public getHandValue():string{

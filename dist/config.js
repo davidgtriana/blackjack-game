@@ -1,4 +1,7 @@
 export class GameConfig {
+    // Timer
+    static DEAL_CARD_DELAY = 250;
+    // Table Rules
     static MAX_HANDS = 4;
     static MAX_BET_BOXES = 9;
     static MAX_BET_BOXES_PER_PLAYER = 2;
