@@ -1,8 +1,25 @@
 body {
     font-family: Arial, sans-serif;
     text-align: center;
-    background-color: lightseagreen;
+    background-color: rgb(5, 99, 28);
     color: black;
+    height: 100vh;
+    margin: 0;
+}
+
+body::before {
+    content: "";
+    background: radial-gradient(circle, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.5) 100%);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    opacity: 1;
 }
 
 .card{
@@ -14,16 +31,34 @@ body {
 }
 
 #dealer-area {
-    background-color: lightgrey;
+    background: linear-gradient( to right,
+        rgba(0, 0, 0, 0) 20%,
+        rgba(0, 0, 0, 0.35) 40%,
+        rgba(0, 0, 0, 0.35) 60%,
+        rgba(0, 0, 0, 0) 80%);
+
     padding: 10px 10px;
     height: 150px;
+
+    width: 90%; /* Or any fixed width */
+    max-width: 1000px; /* Prevents it from getting too big */
+    margin: 0 auto; /* Centers horizontally */
 }
 
-#dealer-area .value{
+#dealer-area .hand{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+#dealer-area .hand .value{
     font-size: 30px;
+    color: white;
 }
 
-#dealer-area .hand {
+#dealer-area .hand .cards{
     display: flex;
     flex-direction: row-reverse;
     justify-content: center;
@@ -34,21 +69,23 @@ body {
     display: flex;
     flex-wrap: wrap;
     flex-direction: row-reverse;
-    padding-top: 150px;
+    padding-top: 200px;
     padding-bottom: 30px;
     justify-content: center;
     gap: 30px;
 }
 
 .bet-box {
-    background-color: #2e8b57;
-    border-radius: 50px;
+    background: radial-gradient(circle, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.6) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    outline: 1px dashed rgba(255, 255, 255, 0.6);
+    outline-offset: 1px;
+    border-radius: 50%;
     width: 80px;
     height: 80px;
     position: relative;
     display: flex;
     justify-content: center;
-    display: ;
 }
 
 .bet-box .hand{
@@ -56,7 +93,6 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    
 }
 
 .hand.current_turn{
@@ -130,8 +166,6 @@ body {
     cursor: pointer;
 }
 
-
-
 .btn:hover {
     background-color: rgb(211, 85, 53);
 }
@@ -139,5 +173,4 @@ body {
 .btn:disabled {
     background-color: gray;
     cursor: not-allowed;
-    
 }
