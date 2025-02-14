@@ -34,10 +34,10 @@ body {
     display: flex;
     flex-wrap: wrap;
     flex-direction: row-reverse;
-    padding-top: 200px;
+    padding-top: 150px;
     padding-bottom: 30px;
     justify-content: center;
-    gap: 50px;
+    gap: 30px;
 }
 
 .bet-box {
@@ -56,6 +56,16 @@ body {
     flex-direction: column;
     align-items: center;
     
+}
+
+.hand.current_turn{
+    animation: floatAnimation 1.5s ease-in-out infinite;
+}
+
+@keyframes floatAnimation {
+    0% {transform: translateY(0px);}
+    50% {transform: translateY(-10px);}
+    100% {transform: translateY(0px);}
 }
 
 .bet-box .hand .card{
@@ -96,7 +106,7 @@ body {
     justify-content: center;
     gap: 10px;
     padding-top: 30px;
-    max-width: 800px;
+    max-width: 600px;
     margin: 0 auto;
 }
 
@@ -116,9 +126,10 @@ body {
     padding: 10px;
     
     text-overflow: ellipsis;
-    
     cursor: pointer;
 }
+
+
 
 .btn:hover {
     background-color: rgb(211, 85, 53);
@@ -127,4 +138,5 @@ body {
 .btn:disabled {
     background-color: gray;
     cursor: not-allowed;
+    
 }

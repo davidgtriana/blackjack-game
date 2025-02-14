@@ -1,8 +1,13 @@
 export class Hand {
-    cards = [];
-    bet = 0;
     id = 0;
     betbox_id = 0;
+    cards = [];
+    bet = 0;
+    // Are buttons enabled for this hand?
+    isActive = false;
+    isDoubleDownEnabled = false;
+    isSplitEnabled = false;
+    isSurrenderEnabled = false;
     total = 0;
     ace_count = 0;
     constructor(bet, id, betbox_id) {
@@ -49,11 +54,14 @@ export class Hand {
         else if (this.id > 1) {
             return this.total.toString();
         }
-        if (this.ace_count > 0 && this.total <= 21) {
+        if (this.isSoft() && this.isActive) {
             return this.total.toString() + "/" + (this.total - 10).toString();
         }
         else {
             return this.total.toString();
         }
+    }
+    isSoft() {
+        return this.total <= 21 && this.ace_count > 0;
     }
 }

@@ -6,14 +6,16 @@ import { GameConfig } from "./config.js";
 import * as Game from "./blackjack/card-game.js";
 let DEBUG_MODE = true;
 class BlackjackGame {
-    // 4 bet boxes, 4 players
-    // --- Seed: 12345
-    // --- --- Dealer Ace UP
-    // --- Seed: 44444
-    // --- --- Dealer Ace UP with Box1 10
-    // --- Seed: 1999472141
-    // --- --- Dealer 3 Box1&4 w Soft totals and Box3 10
-    die = new DiceRoller(12345);
+    // 3 Bet Boxes w/ 3 Players
+    // Seed: 1287203866
+    // --- Dealer Busts with 7 cards if played perfectly
+    // Seed: 2720374580
+    // --- Box 3 has Pocket Aces
+    // Seed: 2664819274
+    // --- All boxes can be doubled if played perfectly
+    // Seed: 4226777415
+    // --- Blazing 9's on Box 1 and Pocket 6's on Box 3
+    die = new DiceRoller();
     shoe;
     discard_pile;
     dealerHand;
@@ -54,13 +56,18 @@ class BlackjackGame {
         this.players.push(new Player("David"));
         this.players.push(new Player("Godoy"));
         this.players.push(new Player("Triana"));
+        this.players.push(new Player("Daiki"));
+        this.players.push(new Player("Kazuma"));
+        this.players.push(new Player("Yuki"));
+        this.players.push(new Player("Yoshida"));
+        this.players.push(new Player("Yamada"));
         // Assigning a player per Bet Box
-        for (let i = 0; i < this.players.length; i++) {
+        for (let i = 0; i < this.bet_boxes.length; i++) {
             //if (i==2) continue;
             this.bet_boxes[i].player = this.players[i];
         }
         // Place Player Bets
-        for (let i = 0; i < this.players.length; i++) {
+        for (let i = 0; i < this.bet_boxes.length; i++) {
             //if (i==2) continue;
             this.bet_boxes[i].placeBet(25); // Creates the first Hand of this bet box
         }
@@ -115,6 +122,7 @@ class BlackjackGame {
         //if (!this.IS_EUROPEAN_NO_HOLE_CARD) this.dealerHand.hit(this.shoe.draw()!);
         if (DEBUG_MODE)
             this.displayConsole();
+        this.courseOfPlay();
     }
     delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
@@ -179,7 +187,87 @@ class BlackjackGame {
         }
     }
     courseOfPlay() {
-        // Iterate through each active hand and ask them what they want to do
+        this.playNextHand();
+    }
+    playNextHand() {
+        // Check if all hands have been played
+        if (this.current_hand_playing_index >= this.active_hands.length) {
+            if (DEBUG_MODE)
+                console.log("All hands have been played. Dealer's turn...");
+            this.playDealerHand();
+            return;
+        }
+        // Select the current hand to play
+        const hand = this.active_hands[this.current_hand_playing_index];
+        if (DEBUG_MODE)
+            console.log("Current Hand Playing: " + (this.current_hand_playing_index + 1));
+        // Highlight the current hand in the UI
+        const element_betbox = document.getElementById("bet-box-" + hand.betbox_id);
+        const element_hand = element_betbox?.querySelector(".hand-" + hand.id);
+        element_hand?.classList.add("current_turn");
+        if (hand.total == 21 && hand.cards.length == 2) {
+            if (DEBUG_MODE)
+                console.log("Blackjack!");
+            this.finishHand();
+            return;
+        }
+        if (DEBUG_MODE)
+            console.log("Waiting for playing action...");
+    }
+    async playDealerHand() {
+        if (this.dealerHand.total > 21) {
+            if (DEBUG_MODE)
+                console.log("Dealer has Too Many...");
+            return;
+        }
+        if (this.dealerHand.total == 21 && this.dealerHand.cards.length == 2) {
+            if (DEBUG_MODE)
+                console.log("Dealer has a Blackjack...");
+            return;
+        }
+        if (this.dealerHand.total > 17) {
+            if (DEBUG_MODE)
+                console.log("Dealer stands on " + this.dealerHand.total + "...");
+            return;
+        }
+        if (this.dealerHand.total == 17) {
+            if (this.dealerHand.isSoft()) {
+                if (GameConfig.IS_DEALER_HIT_ON_17) {
+                    if (DEBUG_MODE)
+                        console.log("Dealer hits on soft 17...");
+                    await this.hitHand(this.dealerHand, this.shoe.draw(), "dealer");
+                    this.dealerHand.print();
+                    this.playDealerHand();
+                    return;
+                }
+                else {
+                    if (DEBUG_MODE)
+                        console.log("Dealer stands on soft 17...");
+                    return;
+                }
+            }
+            if (DEBUG_MODE)
+                console.log("Dealer stands on hard 17...");
+            return;
+        }
+        if (this.dealerHand.total < 17) {
+            if (DEBUG_MODE)
+                console.log("Dealer hits on " + this.dealerHand.total + "...");
+            await this.hitHand(this.dealerHand, this.shoe.draw(), "dealer");
+            this.dealerHand.print();
+            this.playDealerHand();
+            return;
+        }
+    }
+    finishHand() {
+        // Remove the highlight from the current hand
+        const element_current_turn = document.querySelector(".current_turn");
+        element_current_turn?.classList.remove("current_turn");
+        // Make this hand inactive
+        this.active_hands[this.current_hand_playing_index].isActive = false;
+        // Continue playing the next hand
+        this.current_hand_playing_index++;
+        this.playNextHand();
     }
     payAndTake() {
     }
@@ -220,10 +308,44 @@ buttons.forEach(button => {
 });
 // Setting up the click event for the deal button
 document.getElementById("btn-deal")?.addEventListener("click", () => {
+    if (game.active_hands.length != 0)
+        return;
     game.initialDealOut();
 });
-document.getElementById("btn-create-table")?.addEventListener("click", () => {
-    console.log("Creating Table");
+document.getElementById("btn-hit")?.addEventListener("click", async () => {
+    // Do nothing if there are no active hands
+    if (game.active_hands.length == 0)
+        return;
+    // Get the current hand
+    const hand = game.active_hands[game.current_hand_playing_index];
+    // Hit the hand
+    await game.hitHand(hand, game.shoe.draw());
+    if (DEBUG_MODE)
+        console.log("Hit button clicked for the hand No: " + hand.id + " of Bet Box: " + hand.betbox_id);
+    if (DEBUG_MODE)
+        hand.print();
+    // Check if the hand is busted
+    if (hand.total > 21) {
+        if (DEBUG_MODE)
+            console.log("Too Many!");
+        game.finishHand();
+    }
+    if (hand.total == 21) {
+        if (DEBUG_MODE)
+            console.log("21!! Nice Hit!");
+        game.finishHand();
+    }
+});
+document.getElementById("btn-stand")?.addEventListener("click", async () => {
+    // Do nothing if there are no active hands
+    if (game.active_hands.length == 0)
+        return;
+    // Get the current hand
+    const hand = game.active_hands[game.current_hand_playing_index];
+    if (DEBUG_MODE)
+        console.log("Stand button clicked for the hand No: " + hand.id + " of Bet Box: " + hand.betbox_id);
+    // Stand the hand by finishing it
+    game.finishHand();
 });
 function playDealSound() {
     let audioCtx = new window.AudioContext();

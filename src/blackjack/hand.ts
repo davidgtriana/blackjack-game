@@ -1,12 +1,20 @@
 import * as Game from "./card-game.js";
 
 export class Hand{
-    cards: Game.Card[] = [];
-    bet: number = 0;
     id: number = 0;
     betbox_id: number = 0;
+    cards: Game.Card[] = [];
+    bet: number = 0;
 
-    private total: number = 0;
+    
+
+    // Are buttons enabled for this hand?
+    isActive: boolean = false;
+    isDoubleDownEnabled: boolean = false;
+    isSplitEnabled: boolean = false;
+    isSurrenderEnabled: boolean = false;
+
+    total: number = 0;
     private ace_count: number = 0;
     
     constructor(bet:number, id:number, betbox_id: number){
@@ -55,11 +63,15 @@ export class Hand{
         }else if(this.id > 1){
             return this.total.toString();
         }
-        if (this.ace_count > 0 && this.total <= 21) {
+        if (this.isSoft() && this.isActive) {
             return this.total.toString() + "/" + (this.total - 10).toString();
         } else {
             return this.total.toString();
         }
+    }
+
+    public isSoft():boolean{
+        return this.total <= 21 && this.ace_count > 0;
     }
 
 }
