@@ -18,6 +18,8 @@ export class Hand {
     hit(card) {
         // Add card to the list of cards of the hand
         this.cards.push(card);
+        if (this.cards.length == 3)
+            this.isDoubleDownEnabled = false;
         // Add the value of the card to the hand value
         if (card.value == 1) { // ACE
             this.ace_count++;
@@ -35,17 +37,13 @@ export class Hand {
             this.ace_count--;
         }
     }
-    stand() { }
-    double() { }
-    split() { }
-    surrender() { }
-    insurance() { }
     print() {
         console.log("Hand No. " + (this.id ? this.id : 0) + ": Active: " + this.isActive + " Total: " + this.getHandValue() + " Bet: $" + this.bet + " Cards: " + this.cards.map(card => card.toString(true)).join(" | "));
     }
     placeBet(bet) {
         this.bet = bet;
         this.isActive = true;
+        this.isDoubleDownEnabled = true;
     }
     getHandValue() {
         if (this.cards.length == 0)

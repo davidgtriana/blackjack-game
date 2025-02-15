@@ -243,7 +243,7 @@ class BlackjackGame {
         const element_area = entity == "dealer" ? document.getElementById("dealer-area")! : document.querySelector(".bet-box-"+hand.betbox_id)!;
 
         // Selects the element of the Element Area
-        const element_hand = element_area.querySelector(".hand" + (entity=="player"?"-"+hand.id.toString():""))!;
+        const element_hand = element_area.querySelector(".hand" + (entity=="dealer"?"":"-"+hand.id.toString()))!;
 
         // Update Hand Value
         const element_value = element_hand.querySelector(".value")!;
@@ -276,6 +276,25 @@ class BlackjackGame {
                 top: `${-top_offset + card_id * -30}px`,
                 left: `${card_id * 35}px`,
                 rotation: 0,
+                ease: "power2.out"
+            });
+        }
+
+        if(entity=="double"){
+            gsap.set(element_card,{
+                position: "absolute",
+                top: "-400px",
+                left: "0px",
+                opacity: 0,
+                rotation: gsap.utils.random(-100, 100),
+            });
+            gsap.to(element_card, {
+                position: "absolute",
+                duration: 0.7,
+                opacity: 1,
+                top: `${-top_offset + card_id * -30}px`,
+                left: `${card_id * 35}px`,
+                rotation: 90,
                 ease: "power2.out"
             });
         }
@@ -514,7 +533,28 @@ document.getElementById("btn-stand")?.addEventListener("click", async () => {
 });
 
 document.getElementById("btn-double")?.addEventListener("click", async () => {
-    if (DEBUG_MODE) console.log("Double Down button clicked...");
+    if(game.active_hands.length == 0) return;
+    // Get the current hand
+    const hand = game.active_hands[game.current_hand_playing_index];
+
+    if(hand.isDoubleDownEnabled){
+        // Hit the hand
+        await game.hitHand(hand, "double");
+        if(DEBUG_MODE) console.log("Double Down button clicked for the hand No: " + hand.id + " of Bet Box: " + hand.betbox_id);
+        if(DEBUG_MODE) hand.print();
+
+        hand.bet += hand.bet;
+        const element_bet_boxes_area = document.getElementById("bet-boxes-area")!;
+        const element_betbox = element_bet_boxes_area?.querySelector(".bet-box-"+hand.betbox_id)!;
+        const element_hand = element_betbox.querySelector(".hand-"+hand.id)!;
+        const element_hand_bet = element_hand.querySelector(".bet")!;
+        element_hand_bet.textContent = hand.bet.toString();
+        
+        game.finishHand();
+
+    }else{
+        if(DEBUG_MODE) console.log("Double Down not Allowed");
+    }
 });
 
 

@@ -3,7 +3,6 @@ body {
     text-align: center;
     background-color: rgb(5, 99, 28);
     color: black;
-    height: 100vh;
     margin: 0;
     padding-top: 50px;
 }
@@ -163,8 +162,8 @@ body::before {
     flex-wrap: wrap;
     justify-content: center;
     gap: 10px;
-    padding-top: 30px;
-    max-width: 600px;
+    width: 90%;
+    max-width: 700px;
     margin: 0 auto;
 }
 
