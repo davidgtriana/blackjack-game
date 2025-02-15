@@ -20,6 +20,9 @@ class BlackjackGame {
     // --- Soft Total on Box 1 and BJ on Box 2
     // Seed: 1026684650
     // --- BJ on Box 3 an Dealer 6
+    // 2 Bet Boxes w/ 2 players
+    // Seed: 4147411243
+    // --- 6/6 in Box 1 - 10/10 in Box 2 and Dealer 10
     die = new DiceRoller();
     shoe;
     discard_pile;

@@ -13,10 +13,13 @@ export class GameConfig {
     static MIN_BET: number = 25;
         
     static IS_EUROPEAN_NO_HOLE_CARD: boolean = true;
+    static IS_ORIGINAL_BET_ONLY: boolean = true;
+
     static IS_DEALER_HIT_ON_17: boolean = true;
     static IS_ALLOWED_SURRENDER: boolean = true;
     static IS_ALLOWED_DOUBLE_AFTER_SPLIT: boolean = true;
-    static IS_ORIGINAL_BET_ONLY: boolean = true;
+    static IS_ALLOWED_RESPLIT_ACES: boolean = false;
+    
 
     constructor(){
         
