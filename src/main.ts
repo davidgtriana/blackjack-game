@@ -201,8 +201,7 @@ class BlackjackGame {
             
         // Deal the Secondary Card to Dealer
         //if (!this.IS_EUROPEAN_NO_HOLE_CARD) this.dealerHand.hit(this.shoe.draw()!);
-        
-        if (DEBUG_MODE) this.displayConsole();
+
         this.courseOfPlay();
     }
 
@@ -275,9 +274,13 @@ class BlackjackGame {
                 position: "absolute",
                 duration: 0.7,
                 opacity: 1,
-                top: `${-top_offset + card_id * -30}px`,
-                left: `${card_id * 35}px`,
+                top: `${-top_offset + card_id * -50}px`,
+                left: `${card_id * 15}px`,
                 rotation: 90,
+                onUpdate: function() {
+                    const shadowY = gsap.utils.interpolate(5, -5, this.progress()); // Animate Y-offset
+                    element_card.style.boxShadow = `5px ${shadowY}px 5px rgba(0, 0, 0, 0.25)`;
+                },
                 ease: "power2.out"
             });
         }
@@ -303,7 +306,7 @@ class BlackjackGame {
         }
 
 
-        if(DEBUG_MODE) game.active_hands.forEach( hand => hand.print());
+        //if(DEBUG_MODE) game.active_hands.forEach( hand => hand.print());
     }    
     
     public courseOfPlay() {
@@ -318,6 +321,7 @@ class BlackjackGame {
             // Play the Dealer's Hand Recursively
             this.playDealerHand();
             this.dealerHand.isActive = false;
+            this.dealerHand.isFinished = true;
             
             if (this.dealerHand.isSoft()){
                 const element_dealer_area = document.getElementById("dealer-area")!;
@@ -346,6 +350,7 @@ class BlackjackGame {
         }
 
         if(DEBUG_MODE) console.log("Waiting for playing action...");
+        hand.print();
     }
 
     /**
@@ -401,6 +406,8 @@ class BlackjackGame {
     public finishHand(){
         // Select the current hand to play
         const hand = this.active_hands[this.current_hand_playing_index];
+        hand.isFinished = true;
+        hand.print();
 
         // Select the current Hand Element
         const element_current_turn = document.querySelector(".current_turn")!;
@@ -500,7 +507,8 @@ document.getElementById("btn-deal")?.addEventListener("click", () => {
 
 document.getElementById("btn-hit")?.addEventListener("click", async () => {
     // Do nothing if there are no active hands
-    if(game.active_hands.length == 0) return; 
+    if(game.active_hands.length == 0) return;
+    if(game.current_hand_playing_index == game.active_hands.length) return;
 
     // Get the current hand
     const hand = game.active_hands[game.current_hand_playing_index];
@@ -509,8 +517,6 @@ document.getElementById("btn-hit")?.addEventListener("click", async () => {
     await game.hitHand(hand);
 
     if(DEBUG_MODE) console.log("Hit button clicked for the hand No: " + hand.id + " of Bet Box: " + hand.betbox_id);
-
-    if(DEBUG_MODE) hand.print();
 
     // Check if the hand is busted
     if(hand.total > 21){
@@ -548,7 +554,6 @@ document.getElementById("btn-double")?.addEventListener("click", async () => {
     await game.hitHand(current_hand, "double");
 
     if(DEBUG_MODE) console.log("Doubling Down!!...");
-    if(DEBUG_MODE) current_hand.print();
 
     const current_betbox = game.bet_boxes[current_hand.betbox_id-1];
 
@@ -673,24 +678,39 @@ document.getElementById("btn-next-hand")?.addEventListener("click", async () => 
     const element_dealer_value = element_dealer_area.querySelector(".hand .value") as HTMLElement;
     element_dealer_value.innerHTML = "0";
 
-    // Resets the first hand objects of each betbox
-    game.bet_boxes.forEach(betbox =>{ betbox.hands[0].reset(); });
+    // Resets the hands in the table
+    game.bet_boxes.forEach(betbox => { 
+        if (betbox.hands.length > 1)
+            betbox.hands = [betbox.hands[0]];
+        betbox.hands[0].reset();
+    });
 
     // Clean the Active Hands Tracker
     game.active_hands = [];
+
+    const element_bet_boxes_area = document.getElementById("bet-boxes-area")!;
     
-    let element_cards_list = document.getElementById("dealer-area")!.querySelectorAll(".cards")!;
+    let element_cards_list = element_dealer_area.querySelectorAll(".cards")!;
     element_cards_list.forEach(element_cards =>{
         element_cards.innerHTML = "";
     });
 
-    element_cards_list = document.getElementById("bet-boxes-area")!.querySelectorAll(".cards")!;
+    element_cards_list = element_bet_boxes_area.querySelectorAll(".cards")!;
     element_cards_list.forEach(element_cards =>{
         element_cards.innerHTML = "";
+    });
+
+    // Erase Hands Element of any previous split hand leaving only the first one
+    const element_bet_boxes_list = element_bet_boxes_area.querySelectorAll(".bet-box")!;
+    element_bet_boxes_list.forEach(element_betbox =>{
+        while(element_betbox.children.length > 1)
+            element_betbox.removeChild(element_betbox.lastChild!);
     });
 
     // Place new Bets
     game.placeBets();
+
+    console.table(game.bet_boxes);
 });
 
 

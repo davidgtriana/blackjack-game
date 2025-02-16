@@ -1,38 +1,33 @@
 export class Hand {
+    cards = [];
     betbox_id;
     id;
-    cards = [];
     primary_bet;
     secondary_bet;
-    isActive;
-    isBusted;
-    isSplitEnabled;
-    isDoubleDownEnabled;
-    isSurrenderEnabled;
     total = 0;
     ace_count = 0;
+    isActive; // Is the hand still on the table?
+    isBusted; // Is the hand total higher than 21?
+    isFinished; // Has the hand finish its turn?
+    isSplitEnabled; // Does the hand have 2 cards and are both the same point value?
+    isDoubleDownEnabled; // Does the hand have only 2 cards?
+    isSurrenderEnabled; // Has there been any action on the hand?
+    // Special Cases:
+    //  - A hand may be busted but active at the same time.
     constructor(id, betbox_id) {
         this.betbox_id = betbox_id;
         this.id = id;
         this.primary_bet = 0;
         this.secondary_bet = 0;
+        this.total = 0;
+        this.ace_count = 0;
         this.isActive = false;
         this.isBusted = false;
+        this.isFinished = false;
         this.isSplitEnabled = false;
         this.isDoubleDownEnabled = true;
         this.isSurrenderEnabled = true;
     }
-    // constructor(hand:Hand){
-    //     this.betbox_id = hand.betbox_id;
-    //     this.id = hand.id;
-    //     this.primary_bet = hand.primary_bet;
-    //     this.secondary_bet = 0;
-    //     this.isActive = false; // Only activate when dealer checks which BB has a bet or after succesfully split
-    //     this.isBusted = false;
-    //     this.isSplitEnabled = false;
-    //     this.isDoubleDownEnabled = true;
-    //     this.isSurrenderEnabled = true;
-    // }
     addCard(card) {
         // Add card to the list of cards of the hand
         this.cards.push(card);
@@ -60,6 +55,8 @@ export class Hand {
             this.total -= 10;
             this.ace_count--;
         }
+        if (this.total > 21)
+            this.isBusted = true;
     }
     removeCard() {
         // Since removeCard is only possible when splitting a hand, make it false for that hand
@@ -94,9 +91,12 @@ export class Hand {
             "H" + (this.id ? this.id : 0) +
             ": A?" + this.isActive +
             " B?" + this.isBusted +
-            " S?" + this.isSplitEnabled +
+            " F?" + this.isFinished +
+            " Sp?" + this.isSplitEnabled +
             " DD?" + this.isDoubleDownEnabled +
+            " Sr?" + this.isSurrenderEnabled +
             " TT" + this.getHandTotal() +
+            " #A" + this.ace_count +
             " B1$" + this.primary_bet + " B2$" + this.secondary_bet +
             " C: " + this.cards.map(card => card.toString(true)).join(" | "));
     }
@@ -114,7 +114,7 @@ export class Hand {
         else if (this.id > 1) {
             return this.total.toString();
         }
-        if (this.isSoft() && this.isActive) {
+        if (this.isSoft() && !this.isFinished) {
             return this.total.toString() + "/" + (this.total - 10).toString();
         }
         else {
@@ -126,10 +126,16 @@ export class Hand {
     }
     reset() {
         this.cards = [];
+        this.primary_bet = 25;
+        this.secondary_bet = 0;
         this.total = 0;
         this.ace_count = 0;
-        this.primary_bet = 0;
         this.isActive = false;
+        this.isBusted = false;
+        this.isFinished = false;
+        this.isSplitEnabled = false;
+        this.isDoubleDownEnabled = true;
+        this.isSurrenderEnabled = true;
     }
 }
 function areCardsSamePointValue(primary_card, secondary_card) {

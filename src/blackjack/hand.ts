@@ -1,47 +1,41 @@
 import * as Game from "./card-game.js";
 
 export class Hand{
+    cards: Game.Card[] = [];
+
     betbox_id: number;
     id: number;
-    cards: Game.Card[] = [];
     primary_bet: number;
     secondary_bet: number;
-
-    isActive: boolean;
-    isBusted: boolean;
-    isSplitEnabled: boolean;
-    isDoubleDownEnabled: boolean;
-    isSurrenderEnabled: boolean;
-
     total: number = 0;
+    ace_count: number = 0;
 
-    private ace_count: number = 0;
-    
+
+    isActive: boolean; // Is the hand still on the table?
+    isBusted: boolean; // Is the hand total higher than 21?
+    isFinished: boolean; // Has the hand finish its turn?
+    isSplitEnabled: boolean; // Does the hand have 2 cards and are both the same point value?
+    isDoubleDownEnabled: boolean; // Does the hand have only 2 cards?
+    isSurrenderEnabled: boolean; // Has there been any action on the hand?
+
+    // Special Cases:
+    //  - A hand may be busted but active at the same time.
+
     constructor(id:number, betbox_id: number){
         this.betbox_id = betbox_id;
         this.id = id;
         this.primary_bet = 0;
         this.secondary_bet = 0;
+        this.total = 0;
+        this.ace_count = 0;
 
         this.isActive = false; 
         this.isBusted = false;
+        this.isFinished = false;
         this.isSplitEnabled = false;
         this.isDoubleDownEnabled = true;
         this.isSurrenderEnabled = true;
     }
-
-    // constructor(hand:Hand){
-    //     this.betbox_id = hand.betbox_id;
-    //     this.id = hand.id;
-    //     this.primary_bet = hand.primary_bet;
-    //     this.secondary_bet = 0;
-
-    //     this.isActive = false; // Only activate when dealer checks which BB has a bet or after succesfully split
-    //     this.isBusted = false;
-    //     this.isSplitEnabled = false;
-    //     this.isDoubleDownEnabled = true;
-    //     this.isSurrenderEnabled = true;
-    // }
 
     public addCard(card:Game.Card): void{
 
@@ -73,6 +67,9 @@ export class Hand{
             this.total -= 10;
             this.ace_count--;
         }
+
+        if (this.total > 21)
+            this.isBusted = true;
     }
 
     public removeCard(): Game.Card{
@@ -112,9 +109,12 @@ export class Hand{
             "H" + (this.id?this.id:0) +
             ": A?" + this.isActive + 
             " B?" + this.isBusted + 
-            " S?" + this.isSplitEnabled + 
+            " F?" + this.isFinished + 
+            " Sp?" + this.isSplitEnabled + 
             " DD?"+ this.isDoubleDownEnabled + 
+            " Sr?"+ this.isSurrenderEnabled + 
             " TT" + this.getHandTotal() + 
+            " #A" + this.ace_count + 
             " B1$" + this.primary_bet + " B2$" + this.secondary_bet + 
             " C: " + this.cards.map(card => card.toString(true)).join(" | "));
     }
@@ -131,7 +131,7 @@ export class Hand{
         }else if(this.id > 1){
             return this.total.toString();
         }
-        if (this.isSoft() && this.isActive) {
+        if (this.isSoft() && !this.isFinished) {
             return this.total.toString() + "/" + (this.total - 10).toString();
         } else {
             return this.total.toString();
@@ -144,10 +144,18 @@ export class Hand{
 
     public reset() : void{
         this.cards = [];
+
+        this.primary_bet = 25;
+        this.secondary_bet = 0;
         this.total = 0;
         this.ace_count = 0;
-        this.primary_bet = 0;
-        this.isActive = false;
+
+        this.isActive = false; 
+        this.isBusted = false;
+        this.isFinished = false;
+        this.isSplitEnabled = false;
+        this.isDoubleDownEnabled = true;
+        this.isSurrenderEnabled = true;
     }
 
 }
