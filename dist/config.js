@@ -16,6 +16,5 @@ export class GameConfig {
     static IS_ALLOWED_SURRENDER = true;
     static IS_ALLOWED_DOUBLE_AFTER_SPLIT = true;
     static IS_ALLOWED_RESPLIT_ACES = false;
-    constructor() {
-    }
+    constructor() { }
 }

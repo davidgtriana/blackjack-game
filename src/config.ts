@@ -21,7 +21,5 @@ export class GameConfig {
     static IS_ALLOWED_RESPLIT_ACES: boolean = false;
     
 
-    constructor(){
-        
-    }
+    constructor(){}
 }

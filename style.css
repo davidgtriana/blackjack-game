@@ -5,6 +5,7 @@ body {
     color: black;
     margin: 0;
     padding-top: 50px;
+    overflow-x: hidden;
 }
 
 body::before {
@@ -36,6 +37,7 @@ body::before {
     position: fixed;
     top: 0;
     overflow: hidden;
+    z-index: 10;
 }
 
 #shoe-preview-area .cards{
@@ -123,18 +125,22 @@ body::before {
 .bet-box .hand:nth-child(1){
     --base-y: 0px;
     transform: translateY(var(--base-y));
+    z-index: 4;
 }
 .bet-box .hand:nth-child(2){
     --base-y: -15px;
     transform: translateY(var(--base-y));
+    z-index: 3;
 }
 .bet-box .hand:nth-child(3){
     --base-y: -30px;
     transform: translateY(var(--base-y));
+    z-index: 2;
 }
 .bet-box .hand:nth-child(4){
     --base-y: -45px;
     transform: translateY(var(--base-y));
+    z-index: 1;
 }
 
 .hand.current_turn{
