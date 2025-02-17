@@ -90,7 +90,6 @@ body::before {
 
 #bet-boxes-area {
     display: flex;
-    flex-wrap: nowrap;
     
     justify-content: center;
     align-items: center;
@@ -100,7 +99,8 @@ body::before {
     padding-bottom: 30px;
     
     flex-direction: row-reverse;
-    gap: 50px;
+    gap: 10px; /*50px*/
+    
 }
 
 .bet-box {

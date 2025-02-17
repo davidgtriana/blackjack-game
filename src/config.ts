@@ -6,7 +6,7 @@ export class GameConfig {
     static MAX_HANDS: number = 4;
     static MAX_BET_BOXES: number = 9;
     static MAX_BET_BOXES_PER_PLAYER: number = 2;
-    static BET_BOXES_AMOUNT: number = 3;
+    static BET_BOXES_AMOUNT: number = 9;
     static DECKS_PER_SHOE: number = 6;
     static DECK_PENETRATION: number = 0.50;
     static MAX_BET: number = 750;
