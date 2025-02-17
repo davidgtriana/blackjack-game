@@ -96,8 +96,8 @@ export class Hand{
         return card;
     }
 
-    public split(): Hand {
-        const new_hand = new Hand(this.id+1, this.betbox_id);
+    public split(new_id:number): Hand {
+        const new_hand = new Hand(new_id, this.betbox_id);
         new_hand.primary_bet = this.primary_bet;
         new_hand.addCard(this.removeCard());
         return new_hand;

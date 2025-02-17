@@ -14,4 +14,9 @@ export class BetBox{
         this.hands[0].setBet(bet);
         this.player.stack -= bet;
     }
+
+    public print(){
+        console.log("Printing BB"+ this.id);
+        this.hands.forEach(hand => hand.print());
+    }
 }

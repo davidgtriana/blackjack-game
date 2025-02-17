@@ -5,7 +5,6 @@ body {
     color: black;
     margin: 0;
     padding-top: 50px;
-    overflow-x: hidden;
 }
 
 body::before {
@@ -91,15 +90,23 @@ body::before {
 
 #bet-boxes-area {
     display: flex;
-    flex-wrap: wrap;
-    flex-direction: row-reverse;
+    flex-wrap: nowrap;
+    
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    
     padding-top: 200px;
     padding-bottom: 30px;
-    justify-content: center;
-    gap: 80px;
+    
+    flex-direction: row-reverse;
+    gap: 50px;
 }
 
 .bet-box {
+    display: flex;
+    flex: 0 0 auto; /* Prevents shrinking */
+
     background: radial-gradient(circle, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.6) 100%);
     border: 1px solid rgba(255, 255, 255, 0.6);
     outline: 1px dashed rgba(255, 255, 255, 0.6);
@@ -107,10 +114,10 @@ body::before {
     border-radius: 50%;
     width: 80px;
     height: 80px;
-    gap:-10px;
+    gap: -10px; /* Space between splitted hands*/
 
     position: relative;
-    display: flex;
+    
     flex-direction: row-reverse;
     justify-content: center;
 }
