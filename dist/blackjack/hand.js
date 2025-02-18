@@ -7,12 +7,13 @@ export class Hand {
     secondary_bet;
     total = 0;
     ace_count = 0;
-    isActive; // Is the hand still on the table?
+    isOnTheTable; // Is the hand still on the table?
     isBusted; // Is the hand total higher than 21?
     isBlackJack; // Is the hand a blackjack?
     isFinished; // Has the hand finish its turn?
     isSplitted; // Is the hand splitted? (More hands in the same betbox)
     isSplitEnabled; // Does the hand have 2 cards and are both the same point value?
+    isDoubled;
     isDoubleDownEnabled; // Does the hand have only 2 cards?
     isSurrenderEnabled; // Has there been any action on the hand?
     // Special Cases:
@@ -24,12 +25,13 @@ export class Hand {
         this.secondary_bet = 0;
         this.total = 0;
         this.ace_count = 0;
-        this.isActive = false;
+        this.isOnTheTable = true;
         this.isBusted = false;
         this.isBlackJack = false;
         this.isFinished = false;
         this.isSplitted = false;
         this.isSplitEnabled = false;
+        this.isDoubled = false;
         this.isDoubleDownEnabled = true;
         this.isSurrenderEnabled = true;
     }
@@ -55,12 +57,15 @@ export class Hand {
         if (this.cards.length == 2) {
             if (this.total == 21) {
                 this.isFinished = true;
-                if (!this.isSplitted)
+                if (!this.isSplitted) {
                     this.isBlackJack = true;
+                    this.isDoubleDownEnabled = false;
+                    this.isSurrenderEnabled = false;
+                }
                 return;
             }
             // Check if it can be splittable
-            if (areCardsSamePointValue(this.cards[0], this.cards[1]))
+            if (this.areCardsSamePointValue())
                 if (this.id < GameConfig.MAX_HANDS_PER_BOX)
                     this.isSplitEnabled = true;
         }
@@ -91,22 +96,30 @@ export class Hand {
     split(new_id) {
         const new_hand = new Hand(new_id, this.betbox_id);
         new_hand.primary_bet = this.primary_bet;
-        new_hand.isSplitted = true;
         this.isSplitted = true;
+        new_hand.isSplitted = true;
+        this.isSplitEnabled = false;
+        new_hand.isSplitEnabled = false;
+        this.isSurrenderEnabled = false;
         new_hand.isSurrenderEnabled = false;
         new_hand.addCard(this.removeCard());
         return new_hand;
     }
+    get print_id() {
+        return "BB" + this.betbox_id + "H" + this.id + ":";
+    }
     print() {
         console.log("BB" + this.betbox_id +
             "H" + (this.id ? this.id : 0) +
-            ": A?" + this.isActive +
+            ": A?" + this.isOnTheTable +
             " B?" + this.isBusted +
             " BJ?" + this.isBlackJack +
+            " pBJ?" + this.isTherePotentialForBJ() +
             " F?" + this.isFinished +
             " SpH?" + this.isSplitted +
             " SpE?" + this.isSplitEnabled +
-            " DD?" + this.isDoubleDownEnabled +
+            " DDH?" + this.isDoubled +
+            " DDE?" + this.isDoubleDownEnabled +
             " Sr?" + this.isSurrenderEnabled +
             " TT" + this.getHandTotal() +
             " #A" + this.ace_count +
@@ -143,16 +156,22 @@ export class Hand {
         this.secondary_bet = 0;
         this.total = 0;
         this.ace_count = 0;
-        this.isActive = false;
+        this.isOnTheTable = false;
         this.isBusted = false;
         this.isBlackJack = false;
         this.isFinished = false;
         this.isSplitted = false;
         this.isSplitEnabled = false;
+        this.isDoubled = false;
         this.isDoubleDownEnabled = true;
         this.isSurrenderEnabled = true;
     }
-}
-function areCardsSamePointValue(primary_card, secondary_card) {
-    return (primary_card.value >= 10 && secondary_card.value >= 10) || (primary_card.value == secondary_card.value);
+    get primary_card() { return this.cards[0]; }
+    get secondary_card() { return this.cards[1]; }
+    areCardsSamePointValue() {
+        return (this.primary_card.value >= 10 && this.secondary_card.value >= 10) || (this.primary_card.value == this.secondary_card.value);
+    }
+    isTherePotentialForBJ() {
+        return this.primary_card.value >= 10 || this.primary_card.value == 1;
+    }
 }
