@@ -284,8 +284,11 @@ class BlackjackGame {
             console.log("Current Hand Playing: " + (this.current_active_hand + 1));
         // Highlight the current hand in the UI
         const element_betbox = document.querySelector(".bet-box-" + hand.betbox_id);
+        const selectedBox = document.querySelector(".box.selected");
         const element_hand = element_betbox?.querySelector(".hand-" + hand.id);
         element_hand.classList.add("current_turn");
+        element_hand.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+        // Focus the current hand in the UI
         if (hand.cards.length == 1)
             await this.hitHand(hand);
         if (hand.isFinished)
