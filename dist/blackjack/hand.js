@@ -1,3 +1,4 @@
+import { GameConfig } from "../config.js";
 export class Hand {
     cards = [];
     betbox_id;
@@ -59,7 +60,9 @@ export class Hand {
                 return;
             }
             // Check if it can be splittable
-            this.isSplitEnabled = areCardsSamePointValue(this.cards[0], this.cards[1]);
+            if (areCardsSamePointValue(this.cards[0], this.cards[1]))
+                if (this.id < GameConfig.MAX_HANDS_PER_BOX)
+                    this.isSplitEnabled = true;
         }
         if (this.cards.length >= 3) {
             // Disable double down and surrender if hand has 3 cards or more
@@ -73,19 +76,12 @@ export class Hand {
     }
     removeCard() {
         this.isSurrenderEnabled = false;
-        console.table(this);
         // Remove the cards of the list of cards
         const card = this.cards.pop();
-        // Adjust total value of the hand
-        // Ace
-        if (card.value == 1) {
-            this.total--;
-            console.table(this);
-            // Face Card (J, Q, K)
-        }
-        else if (card.value >= 10) {
+        // Face Card (J, Q, K)
+        if (card.value >= 10) {
             this.total -= 10;
-            // Number Cards (2-9)
+            // Number Cards (1-9)
         }
         else {
             this.total -= card.value;
@@ -143,7 +139,7 @@ export class Hand {
     }
     reset() {
         this.cards = [];
-        this.primary_bet = 25;
+        this.primary_bet = 0;
         this.secondary_bet = 0;
         this.total = 0;
         this.ace_count = 0;

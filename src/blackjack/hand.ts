@@ -1,3 +1,4 @@
+import { GameConfig } from "../config.js";
 import * as Game from "./card-game.js";
 
 export class Hand{
@@ -70,7 +71,10 @@ export class Hand{
             }
 
             // Check if it can be splittable
-            this.isSplitEnabled = areCardsSamePointValue(this.cards[0],this.cards[1]);
+            if(areCardsSamePointValue(this.cards[0],this.cards[1]))
+                if(this.id < GameConfig.MAX_HANDS_PER_BOX)
+                    this.isSplitEnabled = true;
+                
         }
 
         if (this.cards.length >= 3) {
@@ -87,21 +91,15 @@ export class Hand{
 
     public removeCard(): Game.Card{
         this.isSurrenderEnabled = false;
-        console.table(this);
+
         // Remove the cards of the list of cards
         const card = this.cards.pop()!;
         
-        // Adjust total value of the hand
-        // Ace
-        if (card.value == 1){
-            this.total--;
-            console.table(this);
-
         // Face Card (J, Q, K)
-        } else if (card.value >= 10) { 
+        if (card.value >= 10) { 
             this.total -= 10;
             
-        // Number Cards (2-9)
+        // Number Cards (1-9)
         } else { 
             this.total -= card.value;
         }
@@ -165,7 +163,7 @@ export class Hand{
     public reset() : void{
         this.cards = [];
 
-        this.primary_bet = 25;
+        this.primary_bet = 0;
         this.secondary_bet = 0;
         this.total = 0;
         this.ace_count = 0;
