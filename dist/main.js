@@ -23,14 +23,14 @@ class BlackjackGame {
     // 2 Bet Boxes w/ 2 players
     // Seed: 4147411243
     // --- 6/6 in Box 1 - 10/10 in Box 2 and Dealer 10
-    die = new DiceRoller(744702958);
+    die = new DiceRoller(2720374580);
     shoe;
     discard_pile;
     dealerHand;
     players = [];
     bet_boxes = [];
     active_hands = [];
-    current_hand_playing_index_in_active_hand_list = 0;
+    current_active_hand = 0;
     current_betbox_playing_index_in_active_hand_list = 0;
     constructor() {
         if (DEBUG_MODE)
@@ -142,7 +142,7 @@ class BlackjackGame {
         element_cards.firstChild.remove();
     }
     async initialDealOut() {
-        this.current_hand_playing_index_in_active_hand_list = 0;
+        this.current_active_hand = 0;
         // Track Active Hands
         for (let betbox of this.bet_boxes) {
             const hand = betbox.hands[0];
@@ -171,11 +171,12 @@ class BlackjackGame {
         playDealSound();
         // Get the Card out of the Shoe
         const card = this.shoe.draw();
+        // Add the Object card to the list of cards of the Hand Object
+        hand.addCard(card);
         // Update the Shoe Preview
         let element_cards = document.getElementById("shoe-preview-area").querySelector(".cards");
         element_cards.firstChild.remove();
-        // Add the Object card to the list of cards of the Hand Object
-        hand.addCard(card);
+        // -------- GRAPHIC UPDATE OF THE HIT
         // Select the Parent Element of the Hand Element
         const element_area = entity == "dealer" ? document.getElementById("dealer-area") : document.querySelector(".bet-box-" + hand.betbox_id);
         // Selects the Hand Element of the Parent Element
@@ -183,6 +184,8 @@ class BlackjackGame {
         // Update Hand Value
         const element_hand_value = element_hand.querySelector(".value");
         element_hand_value.textContent = hand.getHandTotal();
+        if (hand.isBlackJack)
+            element_hand_value.className = "value blackjack";
         // Selects the Cards Container of that Hand
         element_cards = element_hand.querySelector(".cards");
         // Creates the HTML Card Element
@@ -191,7 +194,7 @@ class BlackjackGame {
         // Appends the Card Element to the Cards Container
         element_cards.appendChild(element_card);
         // Animate the Card Element
-        const top_offset = 90;
+        const top_offset = 70;
         if (entity == "player") {
             gsap.set(element_card, {
                 position: "absolute",
@@ -258,7 +261,7 @@ class BlackjackGame {
     }
     async playNextHand() {
         // Check if all hands have been played
-        if (this.current_hand_playing_index_in_active_hand_list >= this.active_hands.length) {
+        if (this.current_active_hand >= this.active_hands.length) {
             if (DEBUG_MODE)
                 console.log("All hands have been played. Dealer's turn...");
             // Play the Dealer's Hand Recursively
@@ -273,21 +276,17 @@ class BlackjackGame {
             return;
         }
         // Select the current hand to play
-        const hand = this.active_hands[this.current_hand_playing_index_in_active_hand_list];
+        const hand = this.active_hands[this.current_active_hand];
         if (DEBUG_MODE)
-            console.log("Current Hand Playing: " + (this.current_hand_playing_index_in_active_hand_list + 1));
+            console.log("Current Hand Playing: " + (this.current_active_hand + 1));
         // Highlight the current hand in the UI
         const element_betbox = document.querySelector(".bet-box-" + hand.betbox_id);
         const element_hand = element_betbox?.querySelector(".hand-" + hand.id);
         element_hand.classList.add("current_turn");
         if (hand.cards.length == 1)
             await this.hitHand(hand);
-        if (hand.total == 21 && hand.cards.length == 2) {
-            if (DEBUG_MODE)
-                console.log("Blackjack!");
+        if (hand.isFinished)
             this.finishHand();
-            return;
-        }
         if (DEBUG_MODE)
             console.log("Waiting for playing action...");
     }
@@ -350,19 +349,19 @@ class BlackjackGame {
     }
     finishHand() {
         // Select the current hand to play
-        const hand = this.active_hands[this.current_hand_playing_index_in_active_hand_list];
+        const hand = this.active_hands[this.current_active_hand];
         hand.isFinished = true;
         // Select the current Hand Element
         const element_hand_current_turn = document.querySelector(".current_turn");
         // Update Hand Value
-        if (this.active_hands[this.current_hand_playing_index_in_active_hand_list].isSoft()) {
+        if (this.active_hands[this.current_active_hand].isSoft()) {
             const element_value = element_hand_current_turn.querySelector(".value");
             element_value.textContent = hand.getHandTotal();
         }
         // Remove the current_turn class
         element_hand_current_turn.classList.remove("current_turn");
         // Continue playing the next hand
-        this.current_hand_playing_index_in_active_hand_list++;
+        this.current_active_hand++;
         this.playNextHand();
     }
     payAndTake() {
@@ -415,7 +414,7 @@ class BlackjackGame {
     print() {
         console.log("Printing Game State");
         this.bet_boxes.forEach(betbox => { betbox.print(); });
-        console.log("Index in the list of active Hands of the hand that just played: " + this.current_hand_playing_index_in_active_hand_list);
+        console.log("Index in the list of active Hands of the hand that just played: " + this.current_active_hand);
         console.log("List of Active Hands: ");
         this.active_hands.forEach(hand => { hand.print(); });
     }
@@ -438,23 +437,24 @@ document.getElementById("btn-hit")?.addEventListener("click", async () => {
     // Do nothing if there are no active hands
     if (game.active_hands.length == 0)
         return;
-    if (game.current_hand_playing_index_in_active_hand_list == game.active_hands.length)
+    if (game.current_active_hand == game.active_hands.length)
         return;
     // Get the current hand
-    const hand = game.active_hands[game.current_hand_playing_index_in_active_hand_list];
+    const hand = game.active_hands[game.current_active_hand];
     // Hit the hand
     await game.hitHand(hand);
     if (DEBUG_MODE)
-        console.log("Hit button clicked for the hand No: " + hand.id + " of Bet Box: " + hand.betbox_id);
+        console.log("BB" + hand.betbox_id + "H" + hand.id + ": Hits");
     // Check if the hand is busted
-    if (hand.total > 21) {
-        if (DEBUG_MODE)
-            console.log("Too Many!");
-        game.finishHand();
-    }
-    if (hand.total == 21) {
-        if (DEBUG_MODE)
-            console.log("21!! Nice Hit!");
+    if (hand.total >= 21) {
+        if (hand.total == 21) {
+            if (DEBUG_MODE)
+                console.log("21!! Nice Hit!");
+        }
+        if (hand.total > 21) {
+            if (DEBUG_MODE)
+                console.log("Too many");
+        }
         game.finishHand();
     }
 });
@@ -462,11 +462,12 @@ document.getElementById("btn-stand")?.addEventListener("click", async () => {
     // Do nothing if there are no active hands
     if (game.active_hands.length == 0)
         return;
+    if (game.current_active_hand == game.active_hands.length)
+        return;
     // Get the current hand
-    const hand = game.active_hands[game.current_hand_playing_index_in_active_hand_list];
+    const hand = game.active_hands[game.current_active_hand];
     if (DEBUG_MODE)
-        console.log("Stand button clicked for the hand No: " + hand.id + " of Bet Box: " + hand.betbox_id);
-    game.print();
+        console.log("BB" + hand.betbox_id + "H" + hand.id + ": Stands");
     // Stand the hand by finishing it
     game.finishHand();
 });
@@ -474,7 +475,7 @@ document.getElementById("btn-double")?.addEventListener("click", async () => {
     if (game.active_hands.length == 0)
         return;
     // Get the Current Hand Object in Play
-    const current_hand = game.active_hands[game.current_hand_playing_index_in_active_hand_list];
+    const current_hand = game.active_hands[game.current_active_hand];
     if (!current_hand.isDoubleDownEnabled)
         return;
     await game.hitHand(current_hand, "double");
@@ -494,7 +495,7 @@ document.getElementById("btn-split")?.addEventListener("click", async () => {
     if (game.active_hands.length == 0)
         return;
     // Get the Current Hand Object in Play
-    const current_hand = game.active_hands[game.current_hand_playing_index_in_active_hand_list];
+    const current_hand = game.active_hands[game.current_active_hand];
     if (!current_hand.isSplitEnabled)
         return;
     if (DEBUG_MODE)
@@ -503,14 +504,11 @@ document.getElementById("btn-split")?.addEventListener("click", async () => {
     const new_hand = current_hand.split(current_betbox.hands.length + 1);
     current_betbox.player.stack -= new_hand.primary_bet;
     new_hand.isActive = true;
-    // Add the New Hand to the list of Active Hands
-    console.log("before adding the new spltted hand");
-    console.table(game.active_hands);
-    console.log("currentbetboxid:" + current_betbox.id + " current betbox hand lenght: " + current_betbox.hands.length);
-    game.current_hand_playing_index_in_active_hand_list;
-    game.active_hands.splice((game.current_hand_playing_index_in_active_hand_list - (current_hand.id - 1) + current_betbox.hands.length), 0, new_hand);
+    // Add the New Hand Object to the list of active hands in the correspondient position
+    game.active_hands.splice((game.current_active_hand - (current_hand.id - 1) + current_betbox.hands.length), 0, new_hand);
     // Add the New Hand to the list of Hands of the current BetBox
     game.bet_boxes[current_hand.betbox_id - 1].hands.push(new_hand);
+    // -------- GRAPHIC UPDATE OF THE HIT
     // Find the Current Bet Box Element
     const element_bet_boxes_area = document.getElementById("bet-boxes-area");
     const element_betbox = element_bet_boxes_area.querySelector(".bet-box-" + current_hand.betbox_id);
@@ -535,13 +533,13 @@ document.getElementById("btn-split")?.addEventListener("click", async () => {
         top: "0px",
         left: "100px",
         opacity: 0,
-        //rotation: gsap.utils.random(-100, 100),
+        rotation: gsap.utils.random(-100, 100),
     });
     gsap.to(element_card, {
         position: "absolute",
         duration: 0.3,
         opacity: 1,
-        top: (-90 + 0).toString() + "px",
+        top: (-80).toString() + "px",
         left: "0px",
         rotation: 0,
         ease: "power2.out"
@@ -549,8 +547,8 @@ document.getElementById("btn-split")?.addEventListener("click", async () => {
     // Add the Hand Element to the BetBox Element
     element_betbox.append(element_new_hand);
     await game.hitHand(current_hand);
-    console.log("after adding the new spltted hand and hitting the current hand");
-    console.table(game.active_hands);
+    if (current_hand.isFinished)
+        game.finishHand();
 });
 document.getElementById("btn-surrender")?.addEventListener("click", async () => {
     if (DEBUG_MODE)
@@ -580,7 +578,7 @@ document.getElementById("btn-next-hand")?.addEventListener("click", async () => 
     // Do nothing if there are no active hands
     if (game.active_hands.length == 0)
         return;
-    if (game.current_hand_playing_index_in_active_hand_list != game.active_hands.length)
+    if (game.current_active_hand != game.active_hands.length)
         return;
     // Resets the Dealer hand
     game.dealerHand.reset();
@@ -610,6 +608,11 @@ document.getElementById("btn-next-hand")?.addEventListener("click", async () => 
     element_bet_boxes_list.forEach(element_betbox => {
         while (element_betbox.children.length > 1)
             element_betbox.removeChild(element_betbox.lastChild);
+    });
+    // Erase any Blackjack Value Class
+    const element_value_blackjack_list = document.querySelectorAll(".blackjack");
+    element_value_blackjack_list.forEach(element_value => {
+        element_value.className = "value";
     });
     // Place new Bets
     game.placeBets();

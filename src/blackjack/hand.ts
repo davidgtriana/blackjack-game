@@ -10,10 +10,11 @@ export class Hand{
     total: number = 0;
     ace_count: number = 0;
 
-
     isActive: boolean; // Is the hand still on the table?
     isBusted: boolean; // Is the hand total higher than 21?
+    isBlackJack: boolean; // Is the hand a blackjack?
     isFinished: boolean; // Has the hand finish its turn?
+    isSplitted: boolean; // Is the hand splitted? (More hands in the same betbox)
     isSplitEnabled: boolean; // Does the hand have 2 cards and are both the same point value?
     isDoubleDownEnabled: boolean; // Does the hand have only 2 cards?
     isSurrenderEnabled: boolean; // Has there been any action on the hand?
@@ -31,7 +32,9 @@ export class Hand{
 
         this.isActive = false; 
         this.isBusted = false;
+        this.isBlackJack = false;
         this.isFinished = false;
+        this.isSplitted = false;
         this.isSplitEnabled = false;
         this.isDoubleDownEnabled = true;
         this.isSurrenderEnabled = true;
@@ -41,16 +44,6 @@ export class Hand{
 
         // Add card to the list of cards of the hand
         this.cards.push(card);
-
-        // Check if it can be splittable
-        if (this.cards.length == 2)
-            this.isSplitEnabled = areCardsSamePointValue(this.cards[0],this.cards[1]);
-
-        // Disable double down and surrender if hand has 3 cards or more
-        if (this.cards.length >= 3) {
-            this.isDoubleDownEnabled = false;
-            this.isSurrenderEnabled = false;
-        }
 
         // Add the value of the card to the hand value
         if(card.value == 1){ // ACE
@@ -68,28 +61,48 @@ export class Hand{
             this.ace_count--;
         }
 
-        if (this.total > 21)
-            this.isBusted = true;
+        if (this.cards.length == 2){
+
+            if(this.total == 21){
+                this.isFinished = true;
+                if(!this.isSplitted) this.isBlackJack = true;
+                return;
+            }
+
+            // Check if it can be splittable
+            this.isSplitEnabled = areCardsSamePointValue(this.cards[0],this.cards[1]);
+        }
+
+        if (this.cards.length >= 3) {
+            // Disable double down and surrender if hand has 3 cards or more
+            this.isDoubleDownEnabled = false;
+            this.isSurrenderEnabled = false;
+
+            if (this.total > 21){
+                this.isBusted = true;
+                this.isFinished = true;
+            }
+        }
     }
 
     public removeCard(): Game.Card{
-        // Since removeCard is only possible when splitting a hand, make it false for that hand
-        this.isSplitEnabled = false;
-        
+        this.isSurrenderEnabled = false;
+        console.table(this);
         // Remove the cards of the list of cards
         const card = this.cards.pop()!;
         
         // Adjust total value of the hand
-        if (card.value == 1) { // Ace handling
-            // this.ace_count--;
-            // if (this.total > 21) {
-            //     this.total -= 1; // If an Ace was already reduced to 1
-            // } else {
-            //     this.total -= 11; // If it was still counted as 11
-            // }
-        } else if (card.value >= 10) { // Face Card (J, Q, K)
+        // Ace
+        if (card.value == 1){
+            this.total--;
+            console.table(this);
+
+        // Face Card (J, Q, K)
+        } else if (card.value >= 10) { 
             this.total -= 10;
-        } else { // Number Cards (2-9)
+            
+        // Number Cards (2-9)
+        } else { 
             this.total -= card.value;
         }
 
@@ -99,6 +112,9 @@ export class Hand{
     public split(new_id:number): Hand {
         const new_hand = new Hand(new_id, this.betbox_id);
         new_hand.primary_bet = this.primary_bet;
+        new_hand.isSplitted = true;
+        this.isSplitted = true;
+        new_hand.isSurrenderEnabled = false;
         new_hand.addCard(this.removeCard());
         return new_hand;
     }
@@ -109,8 +125,10 @@ export class Hand{
             "H" + (this.id?this.id:0) +
             ": A?" + this.isActive + 
             " B?" + this.isBusted + 
-            " F?" + this.isFinished + 
-            " Sp?" + this.isSplitEnabled + 
+            " BJ?" + this.isBlackJack +
+            " F?" + this.isFinished +
+            " SpH?" + this.isSplitted + 
+            " SpE?" + this.isSplitEnabled + 
             " DD?"+ this.isDoubleDownEnabled + 
             " Sr?"+ this.isSurrenderEnabled + 
             " TT" + this.getHandTotal() + 
@@ -125,8 +143,10 @@ export class Hand{
     
     public getHandTotal():string{
         if (this.cards.length == 0) return "0";
+
         if (this.total > 21) return "💥";
-        if (this.total == 21 && this.cards.length == 2){
+
+        if (this.isBlackJack){
             return "BJ";
         }else if(this.id > 1){
             return this.total.toString();
@@ -152,7 +172,9 @@ export class Hand{
 
         this.isActive = false; 
         this.isBusted = false;
+        this.isBlackJack = false;
         this.isFinished = false;
+        this.isSplitted = false;
         this.isSplitEnabled = false;
         this.isDoubleDownEnabled = true;
         this.isSurrenderEnabled = true;
