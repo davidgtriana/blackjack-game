@@ -24,7 +24,7 @@ class BlackjackGame {
     // Seed: 4147411243
     // --- 6/6 in Box 1 - 10/10 in Box 2 and Dealer 10
     // 2169519979 KK candidate
-    die = new DiceRoller(1205145841);
+    die = new DiceRoller(289368277);
     shoe;
     discard_pile;
     dealerHand;
@@ -32,7 +32,6 @@ class BlackjackGame {
     bet_boxes = [];
     active_hands = [];
     current_active_hand = 0;
-    current_betbox_playing_index_in_active_hand_list = 0;
     element_buttons = new Map();
     constructor() {
         if (DEBUG_MODE)
@@ -96,8 +95,8 @@ class BlackjackGame {
             "btn-split": { label: "Split", action: () => actionSplit() },
             "btn-surrender": { label: "Surrender", action: () => actionSurrender() },
             "btn-insurance": { label: "Insurance", action: () => actionInsurance() },
-            "btn-undo": { label: "Undo", action: () => actionUndo() },
             "btn-clear-bets": { label: "Clear Bets", action: () => actionClearBets() },
+            "btn-undo": { label: "Undo", action: () => actionUndo() },
             "btn-reset-table": { label: "Reset Table", action: () => actionResetTable() },
             "btn-create-table": { label: "Create Table", action: () => actionCreateTable() },
             "btn-next-hand": { label: "Next Hand", action: () => actionNextHand() }
@@ -113,6 +112,15 @@ class BlackjackGame {
             // Store the button reference
             this.element_buttons.set(key, button);
         });
+        // Disable Buttons that are not needed before course of play
+        this.element_buttons.get("btn-hit").style.display = "none";
+        this.element_buttons.get("btn-stand").style.display = "none";
+        this.element_buttons.get("btn-double").style.display = "none";
+        this.element_buttons.get("btn-split").style.display = "none";
+        this.element_buttons.get("btn-surrender").style.display = "none";
+        this.element_buttons.get("btn-insurance").style.display = "none";
+        this.element_buttons.get("btn-create-table").style.display = "none";
+        this.element_buttons.get("btn-next-hand").style.display = "none";
     }
     seatPlayers() {
         // Create Players
@@ -161,6 +169,11 @@ class BlackjackGame {
         element_cards.firstChild.remove();
     }
     async initialDealOut() {
+        // Disable Buttons that are not needed
+        this.element_buttons.get("btn-deal").style.display = "none";
+        this.element_buttons.get("btn-clear-bets").style.display = "none";
+        this.element_buttons.get("btn-undo").style.display = "none";
+        this.element_buttons.get("btn-reset-table").style.display = "none";
         this.current_active_hand = 0;
         // Track Active Hands
         for (let betbox of this.bet_boxes) {
@@ -207,7 +220,6 @@ class BlackjackGame {
             element_hand_value.className = "value busted";
         // Selects the Cards Container of that Hand
         element_cards = element_hand.querySelector(".cards");
-        console.log("is this happending?");
         element_cards.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
         // Creates the HTML Card Element
         const card_id = hand.cards.length - 1;
@@ -280,6 +292,8 @@ class BlackjackGame {
     courseOfPlay() {
         if (DEBUG_MODE)
             console.log("Course of play...");
+        this.element_buttons.get("btn-hit").style.display = "flex";
+        this.element_buttons.get("btn-stand").style.display = "flex";
         this.playNextHand();
     }
     async playNextHand() {
@@ -301,22 +315,32 @@ class BlackjackGame {
                 const element_hand_value = element_dealer_area.querySelector(".hand .value");
                 element_hand_value.textContent = this.dealerHand.getHandTotal();
             }
+            this.element_buttons.get("btn-reset-table").style.display = "flex";
+            this.element_buttons.get("btn-next-hand").style.display = "flex";
             return;
         }
         // Select the current hand to play
-        const hand = this.active_hands[this.current_active_hand];
+        const curren_hand = this.active_hands[this.current_active_hand];
         if (DEBUG_MODE)
             console.log("Current Hand Playing: " + (this.current_active_hand + 1));
         // Highlight the current hand in the UI
-        const element_betbox = document.querySelector(".bet-box-" + hand.betbox_id);
-        const selectedBox = document.querySelector(".box.selected");
-        const element_hand = element_betbox?.querySelector(".hand-" + hand.id);
+        const element_betbox = document.querySelector(".bet-box-" + curren_hand.betbox_id);
+        const element_hand = element_betbox?.querySelector(".hand-" + curren_hand.id);
         element_hand.classList.add("current_turn");
         element_hand.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
-        if (hand.cards.length == 1)
-            await this.hitHand(hand);
-        if (hand.isFinished) {
-            if (hand.isBlackJack)
+        // Update Button States
+        this.element_buttons.get("btn-hit").style.display = "flex";
+        this.element_buttons.get("btn-stand").style.display = "flex";
+        if (curren_hand.isDoubleDownEnabled)
+            this.element_buttons.get("btn-double").style.display = "flex";
+        if (curren_hand.isSplitEnabled)
+            this.element_buttons.get("btn-split").style.display = "flex";
+        if (curren_hand.isSurrenderEnabled)
+            this.element_buttons.get("btn-surrender").style.display = "flex";
+        if (curren_hand.cards.length == 1)
+            await this.hitHand(curren_hand);
+        if (curren_hand.isFinished) {
+            if (curren_hand.isBlackJack)
                 if (DEBUG_MODE)
                     console.log("BlackJack...");
             this.finishHand();
@@ -383,6 +407,8 @@ class BlackjackGame {
         }
     }
     finishHand() {
+        game.element_buttons.get("btn-hit").style.display = "none";
+        game.element_buttons.get("btn-stand").style.display = "none";
         // Select the current hand to play
         const hand = this.active_hands[this.current_active_hand];
         hand.isFinished = true;
@@ -470,9 +496,13 @@ buttons.forEach(button => {
 });
 document.querySelectorAll(".bet-box").forEach(element_betbox => {
     element_betbox.addEventListener("click", async (event) => {
+        if (game.active_hands.length != 0)
+            return;
         let classes = event.currentTarget?.classList; // Get all classes
         let element_betbox_class_selected = [...classes].find(cls => cls.startsWith("bet-box-"));
         let bet_box_id_selected = parseInt(element_betbox_class_selected.split("-")[2]);
+        if (game.bet_boxes[bet_box_id_selected - 1].hands.length >= 1)
+            return;
         element_betbox.className = "bet-box " + element_betbox_class_selected;
         game.placeBets(bet_box_id_selected - 1, 25);
     });
@@ -538,6 +568,9 @@ async function actionHit() {
         return;
     // Get the current hand
     const current_hand = game.active_hands[game.current_active_hand];
+    game.element_buttons.get("btn-double").style.display = "none";
+    game.element_buttons.get("btn-split").style.display = "none";
+    game.element_buttons.get("btn-surrender").style.display = "none";
     // Hit the hand
     await game.hitHand(current_hand);
     if (DEBUG_MODE)
@@ -565,6 +598,9 @@ async function actionStand() {
         return;
     // Get the current hand
     const current_hand = game.active_hands[game.current_active_hand];
+    game.element_buttons.get("btn-double").style.display = "none";
+    game.element_buttons.get("btn-split").style.display = "none";
+    game.element_buttons.get("btn-surrender").style.display = "none";
     if (DEBUG_MODE)
         console.log(current_hand.print_id + " Stands");
     // Stand the hand by finishing it
@@ -579,6 +615,9 @@ async function actionDouble() {
     const current_hand = game.active_hands[game.current_active_hand];
     if (!current_hand.isDoubleDownEnabled)
         return;
+    game.element_buttons.get("btn-double").style.display = "none";
+    game.element_buttons.get("btn-split").style.display = "none";
+    game.element_buttons.get("btn-surrender").style.display = "none";
     if (DEBUG_MODE)
         console.log(current_hand.print_id + " Doubles");
     await game.hitHand(current_hand, "double");
@@ -603,6 +642,7 @@ async function actionSplit() {
     const current_hand = game.active_hands[game.current_active_hand];
     if (!current_hand.isSplitEnabled)
         return;
+    game.element_buttons.get("btn-surrender").style.display = "none";
     if (DEBUG_MODE)
         console.log(current_hand.print_id + " Splits");
     const current_betbox = game.bet_boxes[current_hand.betbox_id - 1];
@@ -660,6 +700,8 @@ async function actionSplit() {
         current_hand.isFinished = true;
         new_hand.isFinished = true;
     }
+    if (!current_hand.isSplitEnabled)
+        game.element_buttons.get("btn-split").style.display = "none";
     if (DEBUG_MODE)
         game.print();
     if (current_hand.isFinished)
@@ -721,4 +763,10 @@ async function actionNextHand() {
         const element_id = element_betbox.className.match(/bet-box-(\d+)/);
         element_betbox.className = "bet-box bet-box-" + element_id[1] + " available";
     });
+    // Reset Button States
+    game.element_buttons.get("btn-deal").style.display = "flex";
+    game.element_buttons.get("btn-clear-bets").style.display = "flex";
+    game.element_buttons.get("btn-undo").style.display = "flex";
+    game.element_buttons.get("btn-reset-table").style.display = "flex";
+    game.element_buttons.get("btn-next-hand").style.display = "none";
 }
