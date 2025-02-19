@@ -204,6 +204,5 @@ export class Hand{
     public isTherePotentialForBJ(): boolean{
         return this.primary_card.value >= 10 || this.primary_card.value == 1;
     }
-
 }
 

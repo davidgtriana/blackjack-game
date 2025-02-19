@@ -33,6 +33,7 @@ class BlackjackGame {
     active_hands = [];
     current_active_hand = 0;
     current_betbox_playing_index_in_active_hand_list = 0;
+    element_buttons = new Map();
     constructor() {
         if (DEBUG_MODE)
             console.log("Seed: " + this.die.getSeed());
@@ -85,6 +86,33 @@ class BlackjackGame {
             element_betbox.style.zIndex = (GameConfig.BET_BOXES_AMOUNT - currentBetBox).toString();
             element_bet_boxes_area.append(element_betbox);
         }
+        // Create the Buttons
+        const element_buttons_area = document.getElementById("buttons-area");
+        const buttonConfig = {
+            "btn-deal": { label: "Deal", action: () => actionDeal() },
+            "btn-hit": { label: "Hit", action: () => actionHit() },
+            "btn-stand": { label: "Stand", action: () => actionStand() },
+            "btn-double": { label: "Double", action: () => actionDouble() },
+            "btn-split": { label: "Split", action: () => actionSplit() },
+            "btn-surrender": { label: "Surrender", action: () => actionSurrender() },
+            "btn-insurance": { label: "Insurance", action: () => actionInsurance() },
+            "btn-undo": { label: "Undo", action: () => actionUndo() },
+            "btn-clear-bets": { label: "Clear Bets", action: () => actionClearBets() },
+            "btn-reset-table": { label: "Reset Table", action: () => actionResetTable() },
+            "btn-create-table": { label: "Create Table", action: () => actionCreateTable() },
+            "btn-next-hand": { label: "Next Hand", action: () => actionNextHand() }
+        };
+        Object.entries(buttonConfig).forEach(([key, { label, action }]) => {
+            const button = document.createElement("button");
+            button.className = "btn " + key;
+            button.textContent = label;
+            // Append button to the UI
+            element_buttons_area.appendChild(button);
+            // Attach the event listener
+            button.addEventListener("click", async () => { action(); });
+            // Store the button reference
+            this.element_buttons.set(key, button);
+        });
     }
     seatPlayers() {
         // Create Players
@@ -179,6 +207,8 @@ class BlackjackGame {
             element_hand_value.className = "value busted";
         // Selects the Cards Container of that Hand
         element_cards = element_hand.querySelector(".cards");
+        console.log("is this happending?");
+        element_cards.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
         // Creates the HTML Card Element
         const card_id = hand.cards.length - 1;
         const element_card = this.createCardElement(card, card_id + 1);
@@ -447,8 +477,46 @@ document.querySelectorAll(".bet-box").forEach(element_betbox => {
         game.placeBets(bet_box_id_selected - 1, 25);
     });
 });
-// Setting up the click event for the deal button
-document.getElementById("btn-deal")?.addEventListener("click", () => {
+function playDealSound() {
+    fetch("./assets/sounds/dealing_card.mp3")
+        .then(response => response.arrayBuffer())
+        .then(arrayBuffer => audioCtx.decodeAudioData(arrayBuffer))
+        .then(audioBuffer => {
+        let source = audioCtx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(audioCtx.destination);
+        source.start(0);
+    })
+        .catch(error => console.error("Error playing sound:", error));
+}
+function playHoverButtonSound() {
+    fetch("./assets/sounds/hover_button.wav")
+        .then(response => response.arrayBuffer())
+        .then(arrayBuffer => audioCtx.decodeAudioData(arrayBuffer))
+        .then(audioBuffer => {
+        let source = audioCtx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(audioCtx.destination);
+        source.start(0);
+    })
+        .catch(error => console.error("Error playing sound:", error));
+}
+function playCasinoChipSound() {
+    fetch("./assets/sounds/casino_chip.wav")
+        .then(response => response.arrayBuffer())
+        .then(arrayBuffer => audioCtx.decodeAudioData(arrayBuffer))
+        .then(audioBuffer => {
+        let source = audioCtx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(audioCtx.destination);
+        source.start(0);
+    })
+        .catch(error => console.error("Error playing sound:", error));
+}
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+async function actionDeal() {
     if (game.active_hands.length != 0)
         return;
     const element_betbox_unselected_list = document.querySelectorAll(".available");
@@ -461,8 +529,8 @@ document.getElementById("btn-deal")?.addEventListener("click", () => {
         element_betbox.className = "bet-box bet-box-" + element_id[1];
     });
     game.initialDealOut();
-});
-document.getElementById("btn-hit")?.addEventListener("click", async () => {
+}
+async function actionHit() {
     // Do nothing if there are no active hands
     if (game.active_hands.length == 0)
         return;
@@ -488,8 +556,8 @@ document.getElementById("btn-hit")?.addEventListener("click", async () => {
             game.print();
         game.finishHand();
     }
-});
-document.getElementById("btn-stand")?.addEventListener("click", async () => {
+}
+async function actionStand() {
     // Do nothing if there are no active hands
     if (game.active_hands.length == 0)
         return;
@@ -501,8 +569,8 @@ document.getElementById("btn-stand")?.addEventListener("click", async () => {
         console.log(current_hand.print_id + " Stands");
     // Stand the hand by finishing it
     game.finishHand();
-});
-document.getElementById("btn-double")?.addEventListener("click", async () => {
+}
+async function actionDouble() {
     if (game.active_hands.length == 0)
         return;
     if (game.current_active_hand == game.active_hands.length)
@@ -527,8 +595,8 @@ document.getElementById("btn-double")?.addEventListener("click", async () => {
     if (DEBUG_MODE)
         game.print();
     game.finishHand();
-});
-document.getElementById("btn-split")?.addEventListener("click", async () => {
+}
+async function actionSplit() {
     if (game.active_hands.length == 0)
         return;
     // Get the Current Hand Object in Play
@@ -596,32 +664,32 @@ document.getElementById("btn-split")?.addEventListener("click", async () => {
         game.print();
     if (current_hand.isFinished)
         game.finishHand();
-});
-document.getElementById("btn-surrender")?.addEventListener("click", async () => {
+}
+async function actionSurrender() {
     if (DEBUG_MODE)
         console.log("Surrender button clicked...");
-});
-document.getElementById("btn-insurance")?.addEventListener("click", async () => {
+}
+async function actionInsurance() {
     if (DEBUG_MODE)
         console.log("Insurance button clicked...");
-});
-document.getElementById("btn-undo")?.addEventListener("click", async () => {
+}
+async function actionUndo() {
     if (DEBUG_MODE)
         console.log("Undo button clicked...");
-});
-document.getElementById("btn-clear-bets")?.addEventListener("click", async () => {
+}
+async function actionClearBets() {
     if (DEBUG_MODE)
         console.log("Clear Bets button clicked...");
-});
-document.getElementById("btn-reset-table")?.addEventListener("click", async () => {
+}
+async function actionResetTable() {
     if (DEBUG_MODE)
         console.log("Create reset button clicked...");
-});
-document.getElementById("btn-create-table")?.addEventListener("click", async () => {
+}
+async function actionCreateTable() {
     if (DEBUG_MODE)
         console.log("Create table button clicked...");
-});
-document.getElementById("btn-next-hand")?.addEventListener("click", async () => {
+}
+async function actionNextHand() {
     // Do nothing if there are no active hands
     if (game.active_hands.length == 0)
         return;
@@ -650,47 +718,7 @@ document.getElementById("btn-next-hand")?.addEventListener("click", async () => 
     const element_bet_boxes_list = element_bet_boxes_area.querySelectorAll(".bet-box");
     element_bet_boxes_list.forEach(element_betbox => {
         element_betbox.innerHTML = "";
-        let classes = element_betbox.classList; // Get all classes
         const element_id = element_betbox.className.match(/bet-box-(\d+)/);
         element_betbox.className = "bet-box bet-box-" + element_id[1] + " available";
     });
-});
-function playDealSound() {
-    fetch("./assets/sounds/dealing_card.mp3")
-        .then(response => response.arrayBuffer())
-        .then(arrayBuffer => audioCtx.decodeAudioData(arrayBuffer))
-        .then(audioBuffer => {
-        let source = audioCtx.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(audioCtx.destination);
-        source.start(0);
-    })
-        .catch(error => console.error("Error playing sound:", error));
-}
-function playHoverButtonSound() {
-    fetch("./assets/sounds/hover_button.wav")
-        .then(response => response.arrayBuffer())
-        .then(arrayBuffer => audioCtx.decodeAudioData(arrayBuffer))
-        .then(audioBuffer => {
-        let source = audioCtx.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(audioCtx.destination);
-        source.start(0);
-    })
-        .catch(error => console.error("Error playing sound:", error));
-}
-function playCasinoChipSound() {
-    fetch("./assets/sounds/casino_chip.wav")
-        .then(response => response.arrayBuffer())
-        .then(arrayBuffer => audioCtx.decodeAudioData(arrayBuffer))
-        .then(audioBuffer => {
-        let source = audioCtx.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(audioCtx.destination);
-        source.start(0);
-    })
-        .catch(error => console.error("Error playing sound:", error));
-}
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
 }
