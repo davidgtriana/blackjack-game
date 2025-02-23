@@ -33,17 +33,18 @@ body::before {
 }
 
 .card{
+    display:absolute;
     width: 60px;
     border-radius: 10px;
     border: 1px solid rgba(0, 0, 0, 0.2);
     box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.25);
+    backface-visibility: hidden;
 }
 
 #shoe-preview-area{
     background-color: rgba(0, 0, 0, 0.2);
     width: 100%;
     padding: 10px 5px;
-    display: none;
     position: fixed;
     top: 0;
     overflow: hidden;
@@ -67,7 +68,7 @@ body::before {
     top: 100px;
     right: 0;
     background-color: black;
-    width: 150px;
+    width: 200px;
 
     padding: 10px;
     color: white;
@@ -77,6 +78,12 @@ body::before {
 }
 
 .stack-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.running-container {
     display: flex;
     align-items: center;
     gap: 5px;
@@ -130,7 +137,6 @@ body::before {
 #bet-boxes-area {
     margin: 0px auto;
     width: max-content;
-
     display: flex;
     justify-content: center;
     align-items: center;
@@ -146,8 +152,8 @@ body::before {
     position: relative;
     background: radial-gradient(circle, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.6) 100%);
     border: 1px solid rgba(255, 255, 255, 0.6);
-    outline: 1px dashed rgba(255, 255, 255, 0.6);
-    outline-offset: 1px;
+    outline: 0.5px dashed rgba(255, 255, 255, 0.6);
+    outline-offset: 0.5px;
     border-radius: 50%;
 
     margin: 0px 40px;
@@ -169,10 +175,11 @@ body::before {
 
 .bet-box .hand{
     position: relative;
-    margin: 0px 10px;
     display: flex;
-    flex-direction: column;
+    justify-content: center;
     align-items: center;
+    width: 50px;
+    flex-shrink: 0;
 }
 
 .bet-box .hand:nth-child(1){
@@ -208,10 +215,9 @@ body::before {
 
 .bet-box .hand .value{
     position: absolute;
-    top:-6px;
-    left: 15px;
-    width: 30px;
-    height: 30px;
+    top: -10px;
+    width: 36px;
+    height: 36px;
 
     background: linear-gradient(rgb(110, 110, 110),rgb(0, 0, 0));
     border-radius: 50%;
@@ -222,13 +228,11 @@ body::before {
     align-items: center;
     justify-content: center;
     text-align: center;
-    overflow: hidden; /* Prevents text overflow */
+    overflow: hidden;
 
     color: rgb(255, 255, 255);
-    font-size: 12px;
-    z-index: 1;
-
-    /* transition: transform 1s ease-out; Smooth transition NOT WORKING YET*/
+    font-size: 12.5px;
+    z-index: 2;
 }
 
 .bet-box .hand .value.blackjack{
@@ -244,21 +248,47 @@ body::before {
     animation: floatAnimation 1.5s ease-in-out infinite;
 }
 
-.bet-box .hand .bet{
-    background-color: blueviolet;
+.bet-box .hand .bets {
     position: relative;
-    color: white;
+    display: flex;
+    flex-direction: column;
+}
+
+.bet-box .hand .bets .bet{
+    background: linear-gradient(rgb(83, 231, 66),rgb(13, 151, 50));
+    color: rgb(58, 58, 58);
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    margin-top: 25px;
-    
+
     display: flex;
     justify-content: center;
     align-items: center;
 
     font-size: 1rem;
     font-weight: bold;
+}
+
+/* Border of the Chip */
+.bet-box .hand .bets .bet::after{
+    content: "";
+    background-color: rgb(22, 127, 92);
+    border: 1px dashed rgb(56, 56, 56);
+    width: 29px;
+    height: 29px;
+    border-radius: 50%;
+
+    -webkit-mask: radial-gradient(circle, transparent 64%, white 66%);
+    mask: radial-gradient(circle, transparent 64%, white 66%);
+    position: absolute;
+
+    top: 0px;
+    left: 0px;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    opacity: 1;
+
 }
 
 #buttons-area {

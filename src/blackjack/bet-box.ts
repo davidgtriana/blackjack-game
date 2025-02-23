@@ -18,7 +18,7 @@ export class BetBox{
     }
 
     public placeBet(bet: number){
-        this.hands[0].setBet(bet);
+        this.hands[0].primary_bet = bet;
         this.player.stack -= bet;
     }
 
